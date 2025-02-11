@@ -12,42 +12,92 @@ class OnboardingView extends StatelessWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/bac1.jpg'),
+            image: AssetImage('assets/car1.jpg'),
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Car Image
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Image.asset(
-                  'assets/car1.jpg',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
+            const Spacer(),
+            const Spacer(),
+
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+
             // Welcome Text
-            const Padding(
-              padding: EdgeInsets.only(bottom: 20),
-              child: Text(
+            Container(
+              // color: const Color(0xFFBE9B7B).withOpacity(0.4),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              child: const Text(
                 'Welcome To Our App',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 20,
-                  color: Color(0xFF4A4A4A),
+                  fontSize: 35,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
             // Start Button
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+            const Spacer(),
+
             Padding(
-              padding: const EdgeInsets.only(
-                left: 40,
-                right: 40,
-                bottom: 40,
-              ),
+              padding: const EdgeInsets.all(20),
               child: Container(
                 width: double.infinity,
                 height: 50,
@@ -78,4 +128,4 @@ class OnboardingView extends StatelessWidget {
       ),
     );
   }
-} 
+}

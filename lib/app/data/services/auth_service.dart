@@ -57,4 +57,12 @@ class AuthService extends GetxService {
   Future<AuthService> init() async {
     return this;
   }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } catch (e) {
+      rethrow;
+    }
+  }
 } 

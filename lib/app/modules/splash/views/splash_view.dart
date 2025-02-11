@@ -8,47 +8,59 @@ class SplashView extends GetView<SplashController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Image with animation
-            TweenAnimationBuilder(
-              duration: const Duration(milliseconds: 1500),
-              tween: Tween<double>(begin: 0, end: 1),
-              builder: (context, double value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: child,
-                );
-              },
-              child: Image.asset(
-                'assets/car1.jpg',
-                width: Get.width * 0.7, // 70% of screen width
-                fit: BoxFit.contain,
-              ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background Image
+          Image.asset(
+            'assets/car1.jpg',
+            fit: BoxFit.cover,
+          ),
+
+          // Overlay for better text visibility (optional)
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.2),
             ),
-            const SizedBox(height: 30),
-            // Loading indicator
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            // App name or tagline
-            const Text(
-              'Your Car App',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+          ),
+
+          // Content
+          const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Spacer(),
+
+                // App Name
+                Text(
+                  'Smart Car Rental',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black38,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // Loading Indicator
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+
+                Spacer(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-} 
+}
