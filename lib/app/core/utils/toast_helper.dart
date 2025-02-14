@@ -8,7 +8,7 @@ class ToastHelper {
       message,
       backgroundColor: Colors.green.withOpacity(0.8),
       colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
+      snackPosition: SnackPosition.top,
       margin: const EdgeInsets.all(10),
       duration: const Duration(seconds: 3),
       borderRadius: 10,
@@ -22,7 +22,7 @@ class ToastHelper {
       message,
       backgroundColor: Colors.red.withOpacity(0.8),
       colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
+      snackPosition: SnackPosition.top,
       margin: const EdgeInsets.all(10),
       duration: const Duration(seconds: 3),
       borderRadius: 10,
@@ -36,11 +36,11 @@ class ToastHelper {
       message,
       backgroundColor: Colors.blue.withOpacity(0.8),
       colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
+      snackPosition: SnackPosition.top,
       margin: const EdgeInsets.all(10),
       duration: const Duration(seconds: 3),
       borderRadius: 10,
       icon: const Icon(Icons.info, color: Colors.white),
     );
   }
-} 
+}

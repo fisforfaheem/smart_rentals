@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/data/services/auth_service.dart';
+import 'app/data/services/biometric_service.dart';
 import 'app/routes/app_pages.dart';
 import 'firebase_options.dart';
 
@@ -12,7 +13,10 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    await Get.putAsync(() => AuthService().init());
+
+    Get.put(AuthService());
+    Get.put(BiometricService());
+
     runApp(const MyApp());
   } catch (e) {
     print('Error initializing Firebase: $e');
@@ -25,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Your App Name',
+      title: 'Car Rental App',
       theme: AppTheme.lightTheme,
       initialRoute: '/',
       getPages: AppPages.routes,

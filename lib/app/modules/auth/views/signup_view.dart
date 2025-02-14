@@ -10,12 +10,6 @@ class SignupView extends GetView<AuthController> {
   Widget build(BuildContext context) {
     return GetBuilder<AuthController>(
       builder: (controller) {
-        final TextEditingController nameController = TextEditingController();
-        final TextEditingController emailController = TextEditingController();
-        final TextEditingController phoneController = TextEditingController();
-        final TextEditingController passwordController =
-            TextEditingController();
-
         return Scaffold(
           backgroundColor: const Color(0xFFD2B48C),
           body: SafeArea(
@@ -72,7 +66,7 @@ class SignupView extends GetView<AuthController> {
                               children: [
                                 AnimationHelper.slideInFromBottom(
                                   TextField(
-                                    controller: nameController,
+                                    controller: controller.signupNameController,
                                     decoration: const InputDecoration(
                                       labelText: 'Name',
                                       labelStyle:
@@ -91,7 +85,8 @@ class SignupView extends GetView<AuthController> {
                                 const SizedBox(height: 20),
                                 AnimationHelper.slideInFromBottom(
                                   TextField(
-                                    controller: emailController,
+                                    controller:
+                                        controller.signupEmailController,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       labelText: 'E-mail',
@@ -111,7 +106,8 @@ class SignupView extends GetView<AuthController> {
                                 const SizedBox(height: 20),
                                 AnimationHelper.slideInFromBottom(
                                   TextField(
-                                    controller: phoneController,
+                                    controller:
+                                        controller.signupPhoneController,
                                     keyboardType: TextInputType.phone,
                                     decoration: const InputDecoration(
                                       labelText: 'Phone Number',
@@ -131,7 +127,8 @@ class SignupView extends GetView<AuthController> {
                                 const SizedBox(height: 20),
                                 AnimationHelper.slideInFromBottom(
                                   Obx(() => TextField(
-                                        controller: passwordController,
+                                        controller:
+                                            controller.signupPasswordController,
                                         obscureText:
                                             !controller.isPasswordVisible.value,
                                         decoration: InputDecoration(
@@ -161,6 +158,51 @@ class SignupView extends GetView<AuthController> {
                                         ),
                                       )),
                                 ),
+                                const SizedBox(height: 20),
+                                AnimationHelper.slideInFromBottom(
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextField(
+                                        controller:
+                                            controller.signupPinController,
+                                        keyboardType: TextInputType.number,
+                                        maxLength: 4,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          labelText: 'PIN (4 digits)',
+                                          labelStyle: const TextStyle(
+                                              color: Colors.black54),
+                                          enabledBorder:
+                                              const UnderlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Colors.black38),
+                                          ),
+                                          focusedBorder:
+                                              const UnderlineInputBorder(
+                                            borderSide:
+                                                BorderSide(color: Colors.brown),
+                                          ),
+                                          errorText:
+                                              controller.pinError.value.isEmpty
+                                                  ? null
+                                                  : controller.pinError.value,
+                                          counterText: '',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'This PIN will be used for quick access',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              Colors.black54.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 const SizedBox(height: 40),
                                 AnimationHelper.scaleIn(
                                   SizedBox(
@@ -169,10 +211,13 @@ class SignupView extends GetView<AuthController> {
                                     child: ElevatedButton(
                                       onPressed: () {
                                         controller.signUp(
-                                          nameController.text,
-                                          emailController.text.trim(),
-                                          phoneController.text,
-                                          passwordController.text,
+                                          controller.signupNameController.text,
+                                          controller.signupEmailController.text
+                                              .trim(),
+                                          controller.signupPhoneController.text,
+                                          controller
+                                              .signupPasswordController.text,
+                                          controller.signupPinController.text,
                                         );
                                       },
                                       style: ElevatedButton.styleFrom(

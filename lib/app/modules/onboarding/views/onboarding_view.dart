@@ -106,7 +106,7 @@ class OnboardingView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: TextButton(
-                  onPressed: () => Get.offAllNamed('/login'),
+                  onPressed: () => Get.offAllNamed('/role-selection'),
                   style: TextButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),

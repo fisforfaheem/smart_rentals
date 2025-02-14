@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBRKyuYllwIWrTmJdLcaqWaT3o_zhOrH1Y',
-    appId: '1:975932830965:android:11f9db9a42f61a85bbc1bc',
+    appId: '1:975932830965:android:63fa20ebbf472856bbc1bc',
     messagingSenderId: '975932830965',
     projectId: 'carrental-343fb',
     databaseURL: 'https://carrental-343fb-default-rtdb.firebaseio.com',
@@ -68,11 +68,14 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC9lCskJiznpW5pSc3bGDH4fS14XxfD4g4',
-    appId: '1:975932830965:ios:846e63bb6b58f97fbbc1bc',
+    appId: '1:975932830965:ios:482f8236ce0382a9bbc1bc',
     messagingSenderId: '975932830965',
     projectId: 'carrental-343fb',
     databaseURL: 'https://carrental-343fb-default-rtdb.firebaseio.com',
     storageBucket: 'carrental-343fb.firebasestorage.app',
-    iosBundleId: 'com.example.carApp',
+    iosBundleId: 'com.smartcar.rental',
   );
+
 }
+
+// Make sure this file is properly configured for release

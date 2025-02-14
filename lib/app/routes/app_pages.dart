@@ -7,6 +7,10 @@ import '../modules/splash/views/splash_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/onboarding/bindings/onboarding_binding.dart';
 import '../modules/onboarding/views/onboarding_view.dart';
+import '../modules/role_selection/bindings/role_selection_binding.dart';
+import '../modules/role_selection/views/role_selection_view.dart';
+import '../modules/car_details/views/car_details_view.dart';
+import '../modules/home/bindings/home_binding.dart';
 
 class AppPages {
   static final routes = [
@@ -21,6 +25,11 @@ class AppPages {
       binding: OnboardingBinding(),
     ),
     GetPage(
+      name: '/role-selection',
+      page: () => const RoleSelectionView(),
+      binding: RoleSelectionBinding(),
+    ),
+    GetPage(
       name: '/login',
       page: () => const LoginView(),
       binding: AuthBinding(),
@@ -33,7 +42,21 @@ class AppPages {
     GetPage(
       name: '/home',
       page: () => const HomeView(),
-      binding: AuthBinding(),
+      binding: HomeBinding(),
+      bindings: [AuthBinding()],
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: '/car-details',
+      page: () => const CarDetailsView(
+        name: '',
+        carModel: '',
+        persons: '',
+        price: '',
+        image: '',
+        driverImage: '',
+      ),
+      transition: Transition.rightToLeft,
     ),
   ];
-} 
+}

@@ -5,10 +5,12 @@ import 'package:get/get.dart';
 import '../../../core/utils/toast_helper.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/biometric_service.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
+  final BiometricService _biometricService = Get.find<BiometricService>();
 
   final RxBool isLoading = false.obs;
   final RxBool isPasswordVisible = false.obs;
@@ -18,16 +20,31 @@ class AuthController extends GetxController {
   final RxString emailError = ''.obs;
   final RxString phoneError = ''.obs;
   final RxString passwordError = ''.obs;
+  final RxString pinError = ''.obs;
 
   final TextEditingController loginEmailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController resetEmailController = TextEditingController();
 
+  // Add these controllers
+  final TextEditingController signupNameController = TextEditingController();
+  final TextEditingController signupEmailController = TextEditingController();
+  final TextEditingController signupPhoneController = TextEditingController();
+  final TextEditingController signupPasswordController =
+      TextEditingController();
+  final TextEditingController signupPinController = TextEditingController();
+
   @override
   void onClose() {
+    // Dispose all controllers
     loginEmailController.dispose();
     passwordController.dispose();
     resetEmailController.dispose();
+    signupNameController.dispose();
+    signupEmailController.dispose();
+    signupPhoneController.dispose();
+    signupPasswordController.dispose();
+    signupPinController.dispose();
     super.onClose();
   }
 
@@ -62,7 +79,8 @@ class AuthController extends GetxController {
     }
   }
 
-  bool validateForm(String name, String email, String phone, String password) {
+  bool validateForm(
+      String name, String email, String phone, String password, String pin) {
     bool isValid = true;
 
     // Reset errors
@@ -70,6 +88,7 @@ class AuthController extends GetxController {
     emailError.value = '';
     phoneError.value = '';
     passwordError.value = '';
+    pinError.value = '';
 
     // Name validation
     if (name.isEmpty) {
@@ -107,12 +126,24 @@ class AuthController extends GetxController {
       isValid = false;
     }
 
+    // PIN validation
+    if (pin.isEmpty) {
+      pinError.value = 'PIN is required';
+      isValid = false;
+    } else if (pin.length != 4) {
+      pinError.value = 'PIN must be exactly 4 digits';
+      isValid = false;
+    } else if (!RegExp(r'^[0-9]+$').hasMatch(pin)) {
+      pinError.value = 'PIN must contain only numbers';
+      isValid = false;
+    }
+
     return isValid;
   }
 
-  Future<void> signUp(
-      String name, String email, String phone, String password) async {
-    if (!validateForm(name, email, phone, password)) {
+  Future<void> signUp(String name, String email, String phone, String password,
+      String pin) async {
+    if (!validateForm(name, email, phone, password, pin)) {
       ToastHelper.showError('Please fix the errors in the form');
       return;
     }
@@ -129,6 +160,7 @@ class AuthController extends GetxController {
           name: name,
           email: email,
           phoneNumber: phone,
+          pin: pin,
           createdAt: DateTime.now(),
         );
 
@@ -137,6 +169,7 @@ class AuthController extends GetxController {
             .child(userCredential.user!.uid)
             .set(user.toJson());
 
+        clearSignupFields(); // Clear fields after successful signup
         ToastHelper.showSuccess('Account created successfully');
         Get.offAllNamed('/home');
       } else {
@@ -167,10 +200,12 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
+      // Remove biometric check for now - we'll add it as an optional feature later
       final UserCredential? result =
           await _authService.signInWithEmailAndPassword(email, password);
 
       if (result?.user != null) {
+        clearLoginFields();
         ToastHelper.showSuccess('Welcome back!');
         Get.offAllNamed('/home');
       } else {
@@ -190,10 +225,9 @@ class AuthController extends GetxController {
   Future<void> signOut() async {
     try {
       await _authService.signOut();
-      ToastHelper.showSuccess('Logged out successfully');
-      Get.offAllNamed('/login');
+      Get.offAllNamed('/login'); // Navigate to login after logout
     } catch (e) {
-      ToastHelper.showError('Failed to log out');
+      ToastHelper.showError('Error signing out: $e');
     }
   }
 
@@ -297,5 +331,20 @@ class AuthController extends GetxController {
       ),
       barrierDismissible: false,
     );
+  }
+
+  // Clear form fields after successful signup
+  void clearSignupFields() {
+    signupNameController.clear();
+    signupEmailController.clear();
+    signupPhoneController.clear();
+    signupPasswordController.clear();
+    signupPinController.clear();
+  }
+
+  // Clear login fields
+  void clearLoginFields() {
+    loginEmailController.clear();
+    passwordController.clear();
   }
 }

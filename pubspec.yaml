@@ -1,5 +1,5 @@
-name: your_app_name
-description: "A new Flutter project with Firebase and GetX"
+name: car_rental_app
+description: "A smart car rental application with sensor integration"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.7.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -37,7 +37,7 @@ dependencies:
   firebase_database: ^11.3.2
   
   # State Management
-  get: ^4.6.6
+  get: ^5.0.0-release-candidate-9.3.2
   
   # UI packages
   cupertino_icons: ^1.0.8
@@ -46,7 +46,10 @@ dependencies:
   
   # Utils
   logger: ^2.5.0
-  intl: ^0.20.2
+  intl: any
+
+  # Add this package
+  local_auth: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -106,3 +109,11 @@ flutter:
     - assets/
     - assets/car1.jpg
     - assets/bac1.jpg
+    - assets/car2.png
+    - assets/car3.png
+    - assets/car4.png
+    - assets/dri1.png
+    - assets/dri2.png
+    - assets/dri3.png
+    - assets/sensor.png
+    - assets/sensor2.png
