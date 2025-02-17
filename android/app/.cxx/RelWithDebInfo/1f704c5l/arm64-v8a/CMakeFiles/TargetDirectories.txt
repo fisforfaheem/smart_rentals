@@ -1,0 +1,2 @@
+C:/Users/fisfo/OneDrive/Documents/car_app/android/app/.cxx/RelWithDebInfo/1f704c5l/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/fisfo/OneDrive/Documents/car_app/android/app/.cxx/RelWithDebInfo/1f704c5l/arm64-v8a/CMakeFiles/rebuild_cache.dir

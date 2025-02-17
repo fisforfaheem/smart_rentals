@@ -46,7 +46,7 @@ dependencies:
   
   # Utils
   logger: ^2.5.0
-  intl: any
+  intl: ^0.18.1
 
   # Add this package
   local_auth: ^2.2.0

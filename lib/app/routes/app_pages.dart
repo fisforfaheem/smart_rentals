@@ -27,7 +27,7 @@ class AppPages {
     GetPage(
       name: '/role-selection',
       page: () => const RoleSelectionView(),
-      binding: RoleSelectionBinding(),
+      binding: AuthBinding(),
     ),
     GetPage(
       name: '/login',
@@ -48,14 +48,15 @@ class AppPages {
     ),
     GetPage(
       name: '/car-details',
-      page: () => const CarDetailsView(
-        name: '',
-        carModel: '',
-        persons: '',
-        price: '',
-        image: '',
-        driverImage: '',
-      ),
+      page:
+          () => const CarDetailsView(
+            name: '',
+            carModel: '',
+            persons: '',
+            price: '',
+            image: '',
+            driverImage: '',
+          ),
       transition: Transition.rightToLeft,
     ),
   ];

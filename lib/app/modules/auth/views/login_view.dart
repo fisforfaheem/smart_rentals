@@ -21,6 +21,18 @@ class LoginView extends GetView<AuthController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    AnimationHelper.fadeIn(
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.black54,
+                        ),
+                        onPressed: () {
+                          controller.clearLoginFields();
+                          Get.offAllNamed('/role-selection');
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 60),
                     Container(
                       width: double.infinity,

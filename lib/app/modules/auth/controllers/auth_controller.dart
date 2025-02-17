@@ -6,6 +6,7 @@ import '../../../core/utils/toast_helper.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/biometric_service.dart';
+import 'package:flutter/services.dart'; // Add this import for TextInputFormatters
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -14,6 +15,7 @@ class AuthController extends GetxController {
 
   final RxBool isLoading = false.obs;
   final RxBool isPasswordVisible = false.obs;
+  final RxBool isDriverRegistration = false.obs;
 
   // Form validation
   final RxString nameError = ''.obs;
@@ -34,6 +36,21 @@ class AuthController extends GetxController {
       TextEditingController();
   final TextEditingController signupPinController = TextEditingController();
 
+  // Add driver-specific controllers
+  final TextEditingController licenseNumberController = TextEditingController();
+  final TextEditingController plateNumberController = TextEditingController();
+  final TextEditingController vehicleColorController = TextEditingController();
+  final TextEditingController vehicleCapacityController =
+      TextEditingController();
+  final Rx<DateTime?> vehicleYearOfManufacture = Rx<DateTime?>(null);
+
+  // Add driver-specific error states
+  final RxString licenseNumberError = ''.obs;
+  final RxString plateNumberError = ''.obs;
+  final RxString vehicleColorError = ''.obs;
+  final RxString vehicleCapacityError = ''.obs;
+  final RxString vehicleYomError = ''.obs;
+
   @override
   void onClose() {
     // Dispose all controllers
@@ -45,6 +62,10 @@ class AuthController extends GetxController {
     signupPhoneController.dispose();
     signupPasswordController.dispose();
     signupPinController.dispose();
+    licenseNumberController.dispose();
+    plateNumberController.dispose();
+    vehicleColorController.dispose();
+    vehicleCapacityController.dispose();
     super.onClose();
   }
 
@@ -79,80 +100,109 @@ class AuthController extends GetxController {
     }
   }
 
-  bool validateForm(
-      String name, String email, String phone, String password, String pin) {
+  bool validateFields() {
     bool isValid = true;
 
-    // Reset errors
+    // Reset all errors
     nameError.value = '';
     emailError.value = '';
     phoneError.value = '';
     passwordError.value = '';
     pinError.value = '';
 
-    // Name validation
-    if (name.isEmpty) {
+    // Validate name
+    if (signupNameController.text.isEmpty) {
       nameError.value = 'Name is required';
-      isValid = false;
-    } else if (name.length < 2) {
-      nameError.value = 'Name must be at least 2 characters';
       isValid = false;
     }
 
-    // Email validation
-    if (email.isEmpty) {
+    // Validate email
+    if (signupEmailController.text.isEmpty) {
       emailError.value = 'Email is required';
       isValid = false;
-    } else if (!GetUtils.isEmail(email)) {
+    } else if (!GetUtils.isEmail(signupEmailController.text.trim())) {
       emailError.value = 'Please enter a valid email';
       isValid = false;
     }
 
-    // Phone validation
-    if (phone.isEmpty) {
+    // Validate phone
+    if (signupPhoneController.text.isEmpty) {
       phoneError.value = 'Phone number is required';
       isValid = false;
-    } else if (!GetUtils.isPhoneNumber(phone)) {
+    } else if (!GetUtils.isPhoneNumber(signupPhoneController.text)) {
       phoneError.value = 'Please enter a valid phone number';
       isValid = false;
     }
 
-    // Password validation
-    if (password.isEmpty) {
-      passwordError.value = 'Password is required';
-      isValid = false;
-    } else if (password.length < 6) {
-      passwordError.value = 'Password must be at least 6 characters';
+    // Simplified password validation
+    if (signupPasswordController.text.length < 4) {
+      passwordError.value = 'Password must be at least 4 characters';
       isValid = false;
     }
 
-    // PIN validation
-    if (pin.isEmpty) {
-      pinError.value = 'PIN is required';
+    // Validate PIN (simple 4-digit check)
+    if (signupPinController.text.length != 4) {
+      pinError.value = 'PIN must be 4 digits';
       isValid = false;
-    } else if (pin.length != 4) {
-      pinError.value = 'PIN must be exactly 4 digits';
-      isValid = false;
-    } else if (!RegExp(r'^[0-9]+$').hasMatch(pin)) {
-      pinError.value = 'PIN must contain only numbers';
-      isValid = false;
+    }
+
+    // Only validate driver fields if user is registering as a driver
+    if (isDriverRegistration.value) {
+      // Validate license number
+      if (licenseNumberController.text.isEmpty) {
+        licenseNumberError.value = 'License number is required';
+        isValid = false;
+      }
+
+      // Validate plate number
+      if (plateNumberController.text.isEmpty) {
+        plateNumberError.value = 'Plate number is required';
+        isValid = false;
+      }
+
+      // Validate vehicle color
+      if (vehicleColorController.text.isEmpty) {
+        vehicleColorError.value = 'Vehicle color is required';
+        isValid = false;
+      }
+
+      // Validate vehicle capacity
+      if (vehicleCapacityController.text.isEmpty) {
+        vehicleCapacityError.value = 'Vehicle capacity is required';
+        isValid = false;
+      } else if (!RegExp(
+        r'^[0-9]+$',
+      ).hasMatch(vehicleCapacityController.text)) {
+        vehicleCapacityError.value = 'Please enter a valid number';
+        isValid = false;
+      }
+
+      // Validate year of manufacture
+      if (vehicleYearOfManufacture.value == null) {
+        vehicleYomError.value = 'Year of manufacture is required';
+        isValid = false;
+      }
     }
 
     return isValid;
   }
 
-  Future<void> signUp(String name, String email, String phone, String password,
-      String pin) async {
-    if (!validateForm(name, email, phone, password, pin)) {
-      ToastHelper.showError('Please fix the errors in the form');
+  Future<void> signUp(
+    String name,
+    String email,
+    String phone,
+    String password,
+    String pin,
+  ) async {
+    if (!validateFields()) {
       return;
     }
 
     try {
       isLoading.value = true;
 
-      final UserCredential? userCredential =
-          await _authService.createUserWithEmailAndPassword(email, password);
+      final UserCredential? userCredential = await _authService
+          .createUserWithEmailAndPassword(email, password);
 
       if (userCredential?.user != null) {
         final UserModel user = UserModel(
@@ -199,15 +249,13 @@ class AuthController extends GetxController {
 
     try {
       isLoading.value = true;
-
-      // Remove biometric check for now - we'll add it as an optional feature later
-      final UserCredential? result =
-          await _authService.signInWithEmailAndPassword(email, password);
+      final UserCredential? result = await _authService
+          .signInWithEmailAndPassword(email, password);
 
       if (result?.user != null) {
         clearLoginFields();
-        ToastHelper.showSuccess('Welcome back!');
-        Get.offAllNamed('/home');
+        // Show PIN verification dialog instead of direct navigation
+        showPinVerificationDialog(result!.user!.uid);
       } else {
         ToastHelper.showError('Login failed');
       }
@@ -255,7 +303,8 @@ class AuthController extends GetxController {
         'Password reset link sent to $email.\nPlease check your email inbox.',
       );
     } on FirebaseAuthException catch (e) {
-      String message = _getFirebaseErrorMessage(e.code) ??
+      String message =
+          _getFirebaseErrorMessage(e.code) ??
           'Failed to send reset link. Please try again.';
       ToastHelper.showError(message);
     } catch (e) {
@@ -266,10 +315,7 @@ class AuthController extends GetxController {
   }
 
   void handleLogin() {
-    signIn(
-      loginEmailController.text.trim(),
-      passwordController.text,
-    );
+    signIn(loginEmailController.text.trim(), passwordController.text);
   }
 
   void showResetPasswordDialog() {
@@ -278,10 +324,7 @@ class AuthController extends GetxController {
       AlertDialog(
         title: const Text(
           'Reset Password',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -307,26 +350,27 @@ class AuthController extends GetxController {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
-          Obx(() => TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => forgotPassword(resetEmailController.text.trim()),
-                child: isLoading.value
-                    ? const SizedBox(
+          Obx(
+            () => TextButton(
+              onPressed:
+                  isLoading.value
+                      ? null
+                      : () => forgotPassword(resetEmailController.text.trim()),
+              child:
+                  isLoading.value
+                      ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
+                      : const Text(
                         'Send Reset Link',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-              )),
+            ),
+          ),
         ],
       ),
       barrierDismissible: false,
@@ -340,11 +384,134 @@ class AuthController extends GetxController {
     signupPhoneController.clear();
     signupPasswordController.clear();
     signupPinController.clear();
+    clearDriverFields();
   }
 
   // Clear login fields
   void clearLoginFields() {
     loginEmailController.clear();
     passwordController.clear();
+    isDriverRegistration.value = false; // Reset the driver registration state
+  }
+
+  // Add method to clear driver fields
+  void clearDriverFields() {
+    licenseNumberController.clear();
+    plateNumberController.clear();
+    vehicleColorController.clear();
+    vehicleCapacityController.clear();
+    vehicleYearOfManufacture.value = null;
+  }
+
+  // Add method to pick year of manufacture
+  Future<void> pickYearOfManufacture(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1990),
+      lastDate: DateTime.now(),
+      initialDatePickerMode: DatePickerMode.year,
+    );
+    if (picked != null) {
+      vehicleYearOfManufacture.value = picked;
+    }
+  }
+
+  // Add this method to verify PIN
+  Future<void> verifyPinAndNavigate(String enteredPin, String uid) async {
+    try {
+      isLoading.value = true;
+
+      // Get user data from Firebase
+      final userSnapshot = await _database.child('users').child(uid).get();
+
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.value as Map<dynamic, dynamic>;
+        final storedPin = userData['pin'] as String;
+
+        if (storedPin == enteredPin) {
+          Get.back(); // Close PIN dialog
+          Get.offAllNamed('/home');
+          ToastHelper.showSuccess('Welcome back!');
+        } else {
+          ToastHelper.showError('Incorrect PIN');
+        }
+      } else {
+        ToastHelper.showError('User data not found');
+      }
+    } catch (e) {
+      ToastHelper.showError('Error verifying PIN');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Add method to show PIN verification dialog
+  void showPinVerificationDialog(String uid) {
+    final TextEditingController pinController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text(
+          'Enter PIN',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Please enter your 4-digit PIN to continue',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              obscureText: true,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'PIN',
+                border: OutlineInputBorder(),
+                counterText: '',
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(4),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back();
+              signOut(); // Sign out if user cancels PIN verification
+            },
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          Obx(
+            () => TextButton(
+              onPressed:
+                  isLoading.value
+                      ? null
+                      : () => verifyPinAndNavigate(pinController.text, uid),
+              child:
+                  isLoading.value
+                      ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text(
+                        'Verify',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 }

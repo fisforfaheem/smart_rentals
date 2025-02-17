@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/animation_helper.dart';
+import '../../../modules/auth/controllers/auth_controller.dart';
 
-class RoleSelectionView extends StatelessWidget {
+class RoleSelectionView extends GetView<AuthController> {
   const RoleSelectionView({super.key});
 
   @override
@@ -24,7 +25,6 @@ class RoleSelectionView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(),
-                // Title
                 AnimationHelper.fadeIn(
                   const Text(
                     'Choose Your Role',
@@ -44,61 +44,11 @@ class RoleSelectionView extends StatelessWidget {
                 ),
                 const SizedBox(height: 50),
 
-                // Admin Option
-                AnimationHelper.slideInFromBottom(
-                  GestureDetector(
-                    onTap: () {
-                      Get.offAllNamed('/login');
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 180,
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.admin_panel_settings,
-                            size: 60,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                          const SizedBox(height: 15),
-                          Text(
-                            'Admin',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Manage rentals and users',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
                 // User Option
                 AnimationHelper.slideInFromBottom(
                   GestureDetector(
                     onTap: () {
+                      controller.isDriverRegistration.value = false;
                       Get.offAllNamed('/login');
                     },
                     child: Container(
@@ -133,6 +83,58 @@ class RoleSelectionView extends StatelessWidget {
                           const SizedBox(height: 5),
                           Text(
                             'Rent cars and manage bookings',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Driver Option
+                AnimationHelper.slideInFromBottom(
+                  GestureDetector(
+                    onTap: () {
+                      controller.isDriverRegistration.value = true;
+                      Get.offAllNamed('/login');
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 180,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFBE9B7B).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFFBE9B7B).withOpacity(0.5),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.drive_eta,
+                            size: 60,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            'Driver',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Register as a driver and rent out your car',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withOpacity(0.8),

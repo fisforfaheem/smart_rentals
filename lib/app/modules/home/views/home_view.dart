@@ -258,7 +258,7 @@ class HomeView extends GetView<HomeController> {
                           borderRadius: BorderRadius.circular(12),
                           child: Image.asset(
                             car.image,
-                            width: 120,
+                            width: 90,
                             height: 70,
                             fit: BoxFit.cover,
                           ),
