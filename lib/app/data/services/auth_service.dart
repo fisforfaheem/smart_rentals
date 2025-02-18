@@ -105,8 +105,11 @@ class AuthService extends GetxService {
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email.trim());
+      debugPrint('Attempting to send reset email to: $email');
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
+      debugPrint('Reset email sent successfully');
     } catch (e) {
+      debugPrint('Error sending reset email: $e');
       rethrow;
     }
   }

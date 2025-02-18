@@ -7,6 +7,7 @@ import '../../../data/models/user_model.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/biometric_service.dart';
 import 'package:flutter/services.dart'; // Add this import for TextInputFormatters
+import 'package:flutter/foundation.dart'; // Add this import for debugPrint
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -292,22 +293,37 @@ class AuthController extends GetxController {
 
     try {
       isLoading.value = true;
-      await _authService.sendPasswordResetEmail(email);
+      debugPrint('Starting password reset for email: $email');
 
-      // Close all dialogs first
-      // Get.closeAllDialogs();
-      Get.back();
+      final trimmedEmail = email.trim().toLowerCase();
+      await _authService.sendPasswordResetEmail(trimmedEmail);
 
-      // Then show success message
+      Get.closeAllDialogs();
+
       ToastHelper.showSuccess(
-        'Password reset link sent to $email.\nPlease check your email inbox.',
+        'Password reset link sent to $trimmedEmail\nPlease check your email inbox and spam folder.',
       );
     } on FirebaseAuthException catch (e) {
-      String message =
-          _getFirebaseErrorMessage(e.code) ??
-          'Failed to send reset link. Please try again.';
+      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No account found with this email address';
+          break;
+        case 'invalid-email':
+          message = 'Please enter a valid email address';
+          break;
+        case 'too-many-requests':
+          message = 'Too many attempts. Please try again later';
+          break;
+        default:
+          message =
+              _getFirebaseErrorMessage(e.code) ??
+              'Failed to send reset link. Please try again.';
+      }
       ToastHelper.showError(message);
     } catch (e) {
+      debugPrint('Unexpected error: $e');
       ToastHelper.showError('An unexpected error occurred. Please try again.');
     } finally {
       isLoading.value = false;
@@ -319,57 +335,103 @@ class AuthController extends GetxController {
   }
 
   void showResetPasswordDialog() {
-    resetEmailController.clear(); // Clear previous input
+    resetEmailController.clear();
     Get.dialog(
       AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFF5E6D3),
         title: const Text(
           'Reset Password',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF4A4A4A),
+          ),
+          textAlign: TextAlign.center,
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Enter your email address to receive a password reset link.',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 14, color: Color(0xFF4A4A4A)),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             TextField(
               controller: resetEmailController,
               keyboardType: TextInputType.emailAddress,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Email',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email_outlined),
+                labelStyle: const TextStyle(color: Colors.black54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFBE9B7B)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFBE9B7B),
+                    width: 2,
+                  ),
+                ),
+                prefixIcon: const Icon(
+                  Icons.email_outlined,
+                  color: Color(0xFFBE9B7B),
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          Obx(
-            () => TextButton(
-              onPressed:
-                  isLoading.value
-                      ? null
-                      : () => forgotPassword(resetEmailController.text.trim()),
-              child:
-                  isLoading.value
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text(
-                        'Send Reset Link',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Get.closeAllDialogs(),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed:
+                        isLoading.value
+                            ? null
+                            : () => forgotPassword(
+                              resetEmailController.text.trim(),
+                            ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFBE9B7B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-            ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child:
+                        isLoading.value
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Send Reset Link',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -430,7 +492,7 @@ class AuthController extends GetxController {
         final storedPin = userData['pin'] as String;
 
         if (storedPin == enteredPin) {
-          Get.back(); // Close PIN dialog
+          Get.closeAllDialogs(); // Close PIN dialog
           Get.offAllNamed('/home');
           ToastHelper.showSuccess('Welcome back!');
         } else {
@@ -446,22 +508,30 @@ class AuthController extends GetxController {
     }
   }
 
-  // Add method to show PIN verification dialog
+  // Update the PIN verification dialog
   void showPinVerificationDialog(String uid) {
     final TextEditingController pinController = TextEditingController();
 
     Get.dialog(
       AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFF5E6D3),
         title: const Text(
           'Enter PIN',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF4A4A4A),
+          ),
+          textAlign: TextAlign.center,
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Please enter your 4-digit PIN to continue',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 14, color: Color(0xFF4A4A4A)),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             TextField(
@@ -470,9 +540,26 @@ class AuthController extends GetxController {
               maxLength: 4,
               obscureText: true,
               autofocus: true,
-              decoration: const InputDecoration(
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                letterSpacing: 8,
+                color: Color(0xFF4A4A4A),
+              ),
+              decoration: InputDecoration(
                 labelText: 'PIN',
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.black54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFBE9B7B)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFBE9B7B),
+                    width: 2,
+                  ),
+                ),
                 counterText: '',
               ),
               inputFormatters: [
@@ -483,31 +570,55 @@ class AuthController extends GetxController {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              signOut(); // Sign out if user cancels PIN verification
-            },
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          Obx(
-            () => TextButton(
-              onPressed:
-                  isLoading.value
-                      ? null
-                      : () => verifyPinAndNavigate(pinController.text, uid),
-              child:
-                  isLoading.value
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text(
-                        'Verify',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Get.back();
+                    signOut();
+                  },
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed:
+                        isLoading.value
+                            ? null
+                            : () =>
+                                verifyPinAndNavigate(pinController.text, uid),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFBE9B7B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-            ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child:
+                        isLoading.value
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Verify',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
