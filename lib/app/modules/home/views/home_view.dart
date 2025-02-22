@@ -187,7 +187,17 @@ class HomeView extends GetView<HomeController> {
               return Transform.scale(
                 scale: value,
                 child: GestureDetector(
-                  onTap: () => _navigateToDetails(car),
+                  onTap: () => Get.toNamed(
+                    '/details',
+                    arguments: {
+                      'name': car.name,
+                      'carModel': car.carModel,
+                      'persons': car.persons,
+                      'price': car.price,
+                      'image': car.image,
+                      'driverImage': car.driverImage,
+                    },
+                  ),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(16),

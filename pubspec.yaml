@@ -51,6 +51,9 @@ dependencies:
   # Add this package
   local_auth: ^2.2.0
 
+  # Local notifications
+  flutter_local_notifications: ^18.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

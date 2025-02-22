@@ -78,15 +78,18 @@ class LoginView extends GetView<AuthController> {
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       labelText: 'E-mail',
-                                      labelStyle:
-                                          TextStyle(color: Colors.black54),
+                                      labelStyle: TextStyle(
+                                        color: Colors.black54,
+                                      ),
                                       enabledBorder: UnderlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.black38),
+                                        borderSide: BorderSide(
+                                          color: Colors.black38,
+                                        ),
                                       ),
                                       focusedBorder: UnderlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.brown),
+                                        borderSide: BorderSide(
+                                          color: Colors.brown,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -95,37 +98,42 @@ class LoginView extends GetView<AuthController> {
 
                                 // Password Field with animation
                                 AnimationHelper.slideInFromBottom(
-                                  Obx(() => TextField(
-                                        controller:
-                                            controller.passwordController,
-                                        obscureText:
-                                            !controller.isPasswordVisible.value,
-                                        decoration: InputDecoration(
-                                          labelText: 'Password',
-                                          labelStyle: const TextStyle(
-                                              color: Colors.black54),
-                                          enabledBorder:
-                                              const UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.black38),
-                                          ),
-                                          focusedBorder:
-                                              const UnderlineInputBorder(
-                                            borderSide:
-                                                BorderSide(color: Colors.brown),
-                                          ),
-                                          suffixIcon: IconButton(
-                                            icon: Icon(
-                                              controller.isPasswordVisible.value
-                                                  ? Icons.visibility
-                                                  : Icons.visibility_off,
-                                              color: Colors.black54,
-                                            ),
-                                            onPressed: controller
-                                                .togglePasswordVisibility,
-                                          ),
+                                  Obx(
+                                    () => TextField(
+                                      controller: controller.passwordController,
+                                      obscureText:
+                                          !controller.isPasswordVisible.value,
+                                      decoration: InputDecoration(
+                                        labelText: 'Password',
+                                        labelStyle: const TextStyle(
+                                          color: Colors.black54,
                                         ),
-                                      )),
+                                        enabledBorder:
+                                            const UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.black38,
+                                              ),
+                                            ),
+                                        focusedBorder:
+                                            const UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.brown,
+                                              ),
+                                            ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            controller.isPasswordVisible.value
+                                                ? Icons.visibility
+                                                : Icons.visibility_off,
+                                            color: Colors.black54,
+                                          ),
+                                          onPressed:
+                                              controller
+                                                  .togglePasswordVisibility,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
 
                                 // Forgot Password with fade animation
@@ -133,8 +141,10 @@ class LoginView extends GetView<AuthController> {
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
-                                      onPressed: () =>
-                                          controller.showResetPasswordDialog(),
+                                      onPressed:
+                                          () =>
+                                              controller
+                                                  .showResetPasswordDialog(),
                                       child: const Text(
                                         'Forgot your password?',
                                         style: TextStyle(
@@ -156,25 +166,29 @@ class LoginView extends GetView<AuthController> {
                                     child: ElevatedButton(
                                       onPressed: () => controller.handleLogin(),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFFBE9B7B),
+                                        backgroundColor: const Color(
+                                          0xFFBE9B7B,
+                                        ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                       ),
                                       child: Obx(
-                                        () => controller.isLoading.value
-                                            ? const CircularProgressIndicator(
-                                                color: Colors.white)
-                                            : const Text(
-                                                'SIGN IN',
-                                                style: TextStyle(
+                                        () =>
+                                            controller.isLoading.value
+                                                ? const CircularProgressIndicator(
                                                   color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
+                                                )
+                                                : const Text(
+                                                  'SIGN IN',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                                 ),
-                                              ),
                                       ),
                                     ),
                                   ),
@@ -191,8 +205,9 @@ class LoginView extends GetView<AuthController> {
                                       onPressed: () => Get.toNamed('/signup'),
                                       style: TextButton.styleFrom(
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                       ),
                                       child: const Text(

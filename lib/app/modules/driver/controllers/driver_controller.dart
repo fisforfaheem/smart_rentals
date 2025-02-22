@@ -1,0 +1,118 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../core/utils/toast_helper.dart';
+import 'package:intl/intl.dart';
+
+class DriverController extends GetxController {
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  // Controllers for profile fields
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final pinController = TextEditingController();
+  final licenseNumberController = TextEditingController();
+  final plateNumberController = TextEditingController();
+  final vehicleColorController = TextEditingController();
+  final vehicleCapacityController = TextEditingController();
+  final yearOfManufactureController = TextEditingController();
+  
+  final isEditing = false.obs;
+  final isLoading = false.obs;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    loadDriverProfile();
+  }
+
+  @override
+  void onClose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    pinController.dispose();
+    licenseNumberController.dispose();
+    plateNumberController.dispose();
+    vehicleColorController.dispose();
+    vehicleCapacityController.dispose();
+    yearOfManufactureController.dispose();
+    super.onClose();
+  }
+
+  Future<void> loadDriverProfile() async {
+    try {
+      isLoading.value = true;
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      final snapshot = await _database.child('users').child(userId).get();
+      if (snapshot.exists) {
+        final userData = snapshot.value as Map<dynamic, dynamic>;
+        
+        // Basic user data
+        nameController.text = userData['name'] ?? '';
+        emailController.text = userData['email'] ?? '';
+        phoneController.text = userData['phone'] ?? '';
+        pinController.text = userData['pin'] ?? '';
+
+        // Driver specific data
+        if (userData['driverDetails'] != null) {
+          final driverDetails = userData['driverDetails'] as Map<dynamic, dynamic>;
+          licenseNumberController.text = driverDetails['licenseNumber'] ?? '';
+
+          if (driverDetails['vehicleDetails'] != null) {
+            final vehicleDetails = driverDetails['vehicleDetails'] as Map<dynamic, dynamic>;
+            plateNumberController.text = vehicleDetails['plateNumber'] ?? '';
+            vehicleColorController.text = vehicleDetails['color'] ?? '';
+            vehicleCapacityController.text = vehicleDetails['capacity']?.toString() ?? '';
+            yearOfManufactureController.text = vehicleDetails['yearOfManufacture'] ?? '';
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      ToastHelper.showError('Failed to load profile data');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateProfile() async {
+    try {
+      isLoading.value = true;
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) {
+        ToastHelper.showError('User not authenticated');
+        return;
+      }
+
+      final updates = {
+        'name': nameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'driverDetails': {
+          'licenseNumber': licenseNumberController.text.trim(),
+          'vehicleDetails': {
+            'plateNumber': plateNumberController.text.trim(),
+            'color': vehicleColorController.text.trim(),
+            'capacity': vehicleCapacityController.text.trim(),
+            'yearOfManufacture': yearOfManufactureController.text.trim(),
+          }
+        }
+      };
+
+      await _database.child('users').child(userId).update(updates);
+      
+      isEditing.value = false;
+      ToastHelper.showSuccess('Profile updated successfully');
+    } catch (e) {
+      debugPrint('Error updating profile: $e');
+      ToastHelper.showError('Failed to update profile');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+} 

@@ -521,18 +521,8 @@ class SignupView extends GetView<AuthController> {
                                     width: double.infinity,
                                     height: 45,
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        controller.signUp(
-                                          controller.signupNameController.text,
-                                          controller.signupEmailController.text
-                                              .trim(),
-                                          controller.signupPhoneController.text,
-                                          controller
-                                              .signupPasswordController
-                                              .text,
-                                          controller.signupPinController.text,
-                                        );
-                                      },
+                                      onPressed:
+                                          () => controller.handleSignup(),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color(
                                           0xFFBE9B7B,

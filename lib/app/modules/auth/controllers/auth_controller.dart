@@ -8,9 +8,10 @@ import '../../../data/services/auth_service.dart';
 import '../../../data/services/biometric_service.dart';
 import 'package:flutter/services.dart'; // Add this import for TextInputFormatters
 import 'package:flutter/foundation.dart'; // Add this import for debugPrint
+import 'package:intl/intl.dart';
 
 class AuthController extends GetxController {
-  final AuthService _authService = Get.find<AuthService>();
+  final AuthService _authService = Get.find();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final BiometricService _biometricService = Get.find<BiometricService>();
 
@@ -52,6 +53,19 @@ class AuthController extends GetxController {
   final RxString vehicleCapacityError = ''.obs;
   final RxString vehicleYomError = ''.obs;
 
+  // Text Controllers for signup
+  final TextEditingController carModelController = TextEditingController();
+  final TextEditingController carSeatsController = TextEditingController();
+  final TextEditingController licensePlateController = TextEditingController();
+
+  // Driver specific controllers
+  final vehicleModelController = TextEditingController();
+  // final plateNumberController = TextEditingController();
+  // final vehicleColorController = TextEditingController();
+  // final vehicleCapacityController = TextEditingController();
+  // final licenseNumberController = TextEditingController();
+  // final vehicleYearOfManufacture = Rx<DateTime?>(null);
+
   @override
   void onClose() {
     // Dispose all controllers
@@ -67,6 +81,9 @@ class AuthController extends GetxController {
     plateNumberController.dispose();
     vehicleColorController.dispose();
     vehicleCapacityController.dispose();
+    carModelController.dispose();
+    carSeatsController.dispose();
+    licensePlateController.dispose();
     super.onClose();
   }
 
@@ -188,50 +205,114 @@ class AuthController extends GetxController {
     return isValid;
   }
 
-  Future<void> signUp(
-    String name,
-    String email,
-    String phone,
-    String password,
-    String pin,
-  ) async {
-    if (!validateFields()) {
-      return;
-    }
+  void clearSignupFields() {
+    signupNameController.clear();
+    signupEmailController.clear();
+    signupPasswordController.clear();
+    signupPhoneController.clear();
 
+    // Clear driver specific fields
+    vehicleColorController.clear();
+    vehicleCapacityController.clear();
+    licenseNumberController.clear();
+    plateNumberController.clear();
+    vehicleYearOfManufacture.value = null;
+  }
+
+  void handleSignupError(dynamic e) {
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'email-already-in-use':
+          ToastHelper.showError('Email is already registered');
+          break;
+        case 'invalid-email':
+          ToastHelper.showError('Invalid email format');
+          break;
+        case 'weak-password':
+          ToastHelper.showError('Password is too weak');
+          break;
+        default:
+          ToastHelper.showError('Signup failed: ${e.message}');
+      }
+    } else {
+      ToastHelper.showError('An unexpected error occurred');
+    }
+  }
+
+  Future<void> handleSignup() async {
     try {
+      if (!validateFields()) return;
+
       isLoading.value = true;
 
-      final UserCredential? userCredential = await _authService
-          .createUserWithEmailAndPassword(email, password);
+      // Debug logs for signup
+      debugPrint('=== Starting Signup ===');
+      debugPrint('Basic Info:');
+      debugPrint('Name: ${signupNameController.text}');
+      debugPrint('Email: ${signupEmailController.text}');
+      debugPrint('Phone: ${signupPhoneController.text}');
+
+      final userCredential = await _authService.createUserWithEmailAndPassword(
+        signupEmailController.text.trim(),
+        signupPasswordController.text,
+      );
 
       if (userCredential?.user != null) {
-        final UserModel user = UserModel(
-          uid: userCredential!.user!.uid,
-          name: name,
-          email: email,
-          phoneNumber: phone,
-          pin: pin,
-          createdAt: DateTime.now(),
-        );
+        // Create base user data
+        final Map<String, dynamic> userData = {
+          'name': signupNameController.text.trim(),
+          'email': signupEmailController.text.trim(),
+          'phone': signupPhoneController.text.trim(),
+          'pin': signupPinController.text,
+          'role': isDriverRegistration.value ? 'driver' : 'user',
+        };
+
+        // Add driver-specific data if registering as a driver
+        if (isDriverRegistration.value) {
+          userData['driverDetails'] = {
+            'licenseNumber': licenseNumberController.text,
+            'vehicleDetails': {
+              'plateNumber': plateNumberController.text,
+              'color': vehicleColorController.text,
+              'capacity': vehicleCapacityController.text,
+              'yearOfManufacture':
+                  vehicleYearOfManufacture.value != null
+                      ? DateFormat(
+                        'yyyy',
+                      ).format(vehicleYearOfManufacture.value!)
+                      : null,
+            },
+          };
+
+          debugPrint('Driver Details:');
+          debugPrint('License: ${licenseNumberController.text}');
+          debugPrint('Plate: ${plateNumberController.text}');
+          debugPrint('Color: ${vehicleColorController.text}');
+          debugPrint('Capacity: ${vehicleCapacityController.text}');
+          debugPrint('Year: ${vehicleYearOfManufacture.value}');
+        }
+
+        debugPrint('Saving user data to Firebase:');
+        debugPrint(userData.toString());
 
         await _database
             .child('users')
-            .child(userCredential.user!.uid)
-            .set(user.toJson());
+            .child(userCredential?.user?.uid ?? '')
+            .set(userData);
 
-        clearSignupFields(); // Clear fields after successful signup
-        ToastHelper.showSuccess('Account created successfully');
-        Get.offAllNamed('/home');
-      } else {
-        ToastHelper.showError('Failed to create account');
+        debugPrint('User data saved successfully');
+        clearSignupFields();
+
+        // Navigate based on role
+        if (isDriverRegistration.value) {
+          Get.offAllNamed('/driver-home');
+        } else {
+          Get.offAllNamed('/home');
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      String message =
-          _getFirebaseErrorMessage(e.code) ?? e.message ?? 'An error occurred';
-      ToastHelper.showError(message);
     } catch (e) {
-      ToastHelper.showError('An unexpected error occurred');
+      debugPrint('Error during signup: $e');
+      handleSignupError(e);
     } finally {
       isLoading.value = false;
     }
@@ -330,8 +411,88 @@ class AuthController extends GetxController {
     }
   }
 
-  void handleLogin() {
-    signIn(loginEmailController.text.trim(), passwordController.text);
+  Future<void> handleLogin() async {
+    try {
+      // First check if email is empty
+      if (loginEmailController.text.trim().isEmpty) {
+        ToastHelper.showError('Please enter your email');
+        return;
+      }
+
+      // Check if password is empty
+      if (passwordController.text.isEmpty) {
+        ToastHelper.showError('Please enter your password');
+        return;
+      }
+
+      isLoading.value = true;
+
+      // Get user data first to check role
+      final userCredential = await _authService.signInWithEmailAndPassword(
+        loginEmailController.text.trim(),
+        passwordController.text,
+      );
+
+      if (userCredential != null) {
+        // Get user role from database
+        final userSnapshot =
+            await FirebaseDatabase.instance
+                .ref()
+                .child('users')
+                .child(userCredential.user!.uid)
+                .get();
+
+        if (userSnapshot.exists) {
+          final userData = userSnapshot.value as Map<dynamic, dynamic>;
+          final userRole = userData['role'] as String?;
+
+          // Check if role matches selection
+          if (isDriverRegistration.value && userRole != 'driver') {
+            isLoading.value = false;
+            await _authService.signOut();
+            ToastHelper.showError('This account is not registered as a driver');
+            return;
+          }
+
+          if (!isDriverRegistration.value && userRole == 'driver') {
+            isLoading.value = false;
+            await _authService.signOut();
+            ToastHelper.showError(
+              'Please use driver login for driver accounts',
+            );
+            return;
+          }
+
+          // Navigate based on role
+          if (userRole == 'driver') {
+            Get.offAllNamed('/driver-home');
+          } else {
+            Get.offAllNamed('/home');
+          }
+        }
+      }
+    } catch (e) {
+      isLoading.value = false;
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'user-not-found':
+            ToastHelper.showError('No user found with this email');
+            break;
+          case 'wrong-password':
+            ToastHelper.showError('Invalid password');
+            break;
+          case 'invalid-email':
+            ToastHelper.showError('Invalid email format');
+            break;
+          default:
+            ToastHelper.showError('Login failed: ${e.message}');
+        }
+      } else {
+        ToastHelper.showError('An unexpected error occurred');
+      }
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void showResetPasswordDialog() {
@@ -437,16 +598,6 @@ class AuthController extends GetxController {
       ),
       barrierDismissible: false,
     );
-  }
-
-  // Clear form fields after successful signup
-  void clearSignupFields() {
-    signupNameController.clear();
-    signupEmailController.clear();
-    signupPhoneController.clear();
-    signupPasswordController.clear();
-    signupPinController.clear();
-    clearDriverFields();
   }
 
   // Clear login fields

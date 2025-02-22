@@ -11,6 +11,12 @@ import '../modules/role_selection/bindings/role_selection_binding.dart';
 import '../modules/role_selection/views/role_selection_view.dart';
 import '../modules/car_details/views/car_details_view.dart';
 import '../modules/home/bindings/home_binding.dart';
+import '../modules/details/views/details_view.dart';
+import '../modules/car_details/controllers/car_details_controller.dart';
+import '../modules/car_details/bindings/car_details_binding.dart';
+import '../modules/driver/views/driver_home_view.dart';
+import '../modules/driver/bindings/driver_binding.dart';
+import '../modules/driver/views/driver_profile_view.dart';
 
 class AppPages {
   static final routes = [
@@ -49,14 +55,32 @@ class AppPages {
     GetPage(
       name: '/car-details',
       page:
-          () => const CarDetailsView(
-            name: '',
-            carModel: '',
-            persons: '',
-            price: '',
-            image: '',
-            driverImage: '',
+          () => CarDetailsView(
+            name: Get.arguments['name'] ?? '',
+            carModel: Get.arguments['carModel'] ?? '',
+            persons: Get.arguments['persons'] ?? '',
+            price: Get.arguments['price'] ?? '',
+            image: Get.arguments['image'] ?? '',
+            driverImage: Get.arguments['driverImage'] ?? '',
           ),
+      binding: CarDetailsBinding(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: '/details',
+      page: () => const DetailsView(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: '/driver-home',
+      page: () => const DriverHomeView(),
+      binding: DriverBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: '/driver-profile',
+      page: () => const DriverProfileView(),
+      binding: DriverBinding(),
       transition: Transition.rightToLeft,
     ),
   ];
