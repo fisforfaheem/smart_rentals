@@ -67,7 +67,9 @@ class DriverHomeView extends GetView<DriverController> {
                 try {
                   final authService = Get.find<AuthService>();
                   await authService.signOut();
-                  Get.offAllNamed('/role-selection'); // Navigate to role selection after logout
+                  Get.offAllNamed(
+                    '/role-selection',
+                  ); // Navigate to role selection after logout
                 } catch (e) {
                   debugPrint('Error during logout: $e');
                   Get.snackbar(
@@ -113,23 +115,91 @@ class DriverHomeView extends GetView<DriverController> {
           Row(
             children: [
               Expanded(
-                child: _buildStatusItem(
-                  icon: Icons.local_gas_station,
-                  title: 'Available',
-                  value: 'Yes',
-                  color: Colors.green,
+                child: Obx(
+                  () => _buildStatusItem(
+                    icon: Icons.local_gas_station,
+                    title: 'Available',
+                    value: controller.isBooked.value ? 'No' : 'Yes',
+                    color:
+                        controller.isBooked.value ? Colors.red : Colors.green,
+                  ),
                 ),
               ),
               Expanded(
-                child: _buildStatusItem(
-                  icon: Icons.person,
-                  title: 'Current Bookings',
-                  value: '0',
-                  color: Colors.orange,
+                child: Obx(
+                  () => _buildStatusItem(
+                    icon: Icons.person,
+                    title: 'Current Bookings',
+                    value: controller.isBooked.value ? '1' : '0',
+                    color:
+                        controller.isBooked.value
+                            ? Colors.orange
+                            : Colors.green,
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 15),
+          Obx(
+            () => Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    controller.isBooked.value
+                        ? Icons.car_rental
+                        : Icons.local_taxi,
+                    color:
+                        controller.isBooked.value ? Colors.red : Colors.green,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    controller.isBooked.value
+                        ? 'Currently Booked'
+                        : 'Available for Booking',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          controller.isBooked.value ? Colors.red : Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (controller.isBooked.value)
+            Padding(
+              padding: const EdgeInsets.only(top: 15),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: controller.cancelCurrentBooking,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.cancel, color: Colors.white),
+                  label: const Text(
+                    'Cancel Current Booking',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -174,16 +244,13 @@ class DriverHomeView extends GetView<DriverController> {
 
   Widget _buildSensorStats() {
     final carDetailsController = Get.find<CarDetailsController>();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,7 +296,7 @@ class DriverHomeView extends GetView<DriverController> {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Live Sensor Data
           Obx(
             () => Column(
@@ -263,9 +330,10 @@ class DriverHomeView extends GetView<DriverController> {
       () => Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: carDetailsController.isAccidentDetected.value
-              ? Colors.red.withOpacity(0.2)
-              : Colors.green.withOpacity(0.2),
+          color:
+              carDetailsController.isAccidentDetected.value
+                  ? Colors.red.withOpacity(0.2)
+                  : Colors.green.withOpacity(0.2),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -275,9 +343,10 @@ class DriverHomeView extends GetView<DriverController> {
               carDetailsController.isAccidentDetected.value
                   ? Icons.warning_amber_rounded
                   : Icons.check_circle,
-              color: carDetailsController.isAccidentDetected.value
-                  ? Colors.red
-                  : Colors.green,
+              color:
+                  carDetailsController.isAccidentDetected.value
+                      ? Colors.red
+                      : Colors.green,
               size: 24,
             ),
             const SizedBox(width: 10),
@@ -288,9 +357,10 @@ class DriverHomeView extends GetView<DriverController> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: carDetailsController.isAccidentDetected.value
-                    ? Colors.red
-                    : Colors.green,
+                color:
+                    carDetailsController.isAccidentDetected.value
+                        ? Colors.red
+                        : Colors.green,
               ),
             ),
           ],
@@ -299,7 +369,11 @@ class DriverHomeView extends GetView<DriverController> {
     );
   }
 
-  Widget _buildTemperatureCard(String title, double celsius, double fahrenheit) {
+  Widget _buildTemperatureCard(
+    String title,
+    double celsius,
+    double fahrenheit,
+  ) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -338,10 +412,7 @@ class DriverHomeView extends GetView<DriverController> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white.withOpacity(0.8),
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8)),
         ),
         const SizedBox(height: 5),
         Row(

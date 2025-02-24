@@ -27,7 +27,10 @@ class SignupView extends GetView<AuthController> {
                           Icons.arrow_back,
                           color: Colors.black54,
                         ),
-                        onPressed: () => Get.back(),
+                        onPressed: () {
+                          controller.clearSignupFields();
+                          Get.back();
+                        },
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -73,6 +76,9 @@ class SignupView extends GetView<AuthController> {
                                     () => TextField(
                                       controller:
                                           controller.signupNameController,
+                                      onChanged:
+                                          (value) =>
+                                              controller.validateName(value),
                                       decoration: InputDecoration(
                                         labelText: 'Name',
                                         labelStyle: const TextStyle(
@@ -105,6 +111,9 @@ class SignupView extends GetView<AuthController> {
                                       controller:
                                           controller.signupEmailController,
                                       keyboardType: TextInputType.emailAddress,
+                                      onChanged:
+                                          (value) =>
+                                              controller.validateEmail(value),
                                       decoration: InputDecoration(
                                         labelText: 'E-mail',
                                         labelStyle: const TextStyle(
@@ -137,6 +146,9 @@ class SignupView extends GetView<AuthController> {
                                       controller:
                                           controller.signupPhoneController,
                                       keyboardType: TextInputType.phone,
+                                      onChanged:
+                                          (value) =>
+                                              controller.validatePhone(value),
                                       decoration: InputDecoration(
                                         labelText: 'Phone Number',
                                         labelStyle: const TextStyle(
@@ -164,50 +176,54 @@ class SignupView extends GetView<AuthController> {
                                 ),
                                 const SizedBox(height: 20),
                                 AnimationHelper.slideInFromBottom(
-                                  TextField(
-                                    controller:
-                                        controller.signupPasswordController,
-                                    obscureText:
-                                        !controller.isPasswordVisible.value,
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.black54,
-                                      ),
-                                      enabledBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.black38,
-                                        ),
-                                      ),
-                                      focusedBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Colors.brown,
-                                        ),
-                                      ),
-                                      errorText:
-                                          controller
-                                                          .signupPasswordController
-                                                          .text
-                                                          .length <
-                                                      4 &&
-                                                  controller
-                                                      .signupPasswordController
-                                                      .text
-                                                      .isNotEmpty
-                                              ? 'Password must be at least 4 characters'
-                                              : null,
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          controller.isPasswordVisible.value
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
+                                  Obx(
+                                    () => TextField(
+                                      controller:
+                                          controller.signupPasswordController,
+                                      obscureText:
+                                          !controller.isPasswordVisible.value,
+                                      onChanged:
+                                          (value) => controller
+                                              .validatePassword(value),
+                                      decoration: InputDecoration(
+                                        labelText: 'Password',
+                                        labelStyle: const TextStyle(
                                           color: Colors.black54,
                                         ),
-                                        onPressed:
-                                            controller.togglePasswordVisibility,
+                                        enabledBorder:
+                                            const UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.black38,
+                                              ),
+                                            ),
+                                        focusedBorder:
+                                            const UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.brown,
+                                              ),
+                                            ),
+                                        errorText:
+                                            controller
+                                                    .passwordError
+                                                    .value
+                                                    .isEmpty
+                                                ? null
+                                                : controller
+                                                    .passwordError
+                                                    .value,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            controller.isPasswordVisible.value
+                                                ? Icons.visibility
+                                                : Icons.visibility_off,
+                                            color: Colors.black54,
+                                          ),
+                                          onPressed:
+                                              controller
+                                                  .togglePasswordVisibility,
+                                        ),
                                       ),
                                     ),
-                                    onChanged: (_) => controller.update(),
                                   ),
                                 ),
                                 const SizedBox(height: 20),
@@ -216,48 +232,47 @@ class SignupView extends GetView<AuthController> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      TextField(
-                                        controller:
-                                            controller.signupPinController,
-                                        keyboardType: TextInputType.number,
-                                        maxLength: 4,
-                                        obscureText: true,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                          LengthLimitingTextInputFormatter(4),
-                                        ],
-                                        onChanged: (_) => controller.update(),
-                                        decoration: InputDecoration(
-                                          labelText: 'PIN (4 digits)',
-                                          labelStyle: const TextStyle(
-                                            color: Colors.black54,
+                                      Obx(
+                                        () => TextField(
+                                          controller:
+                                              controller.signupPinController,
+                                          keyboardType: TextInputType.number,
+                                          maxLength: 4,
+                                          obscureText: true,
+                                          onChanged:
+                                              (value) =>
+                                                  controller.validatePin(value),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                            LengthLimitingTextInputFormatter(4),
+                                          ],
+                                          decoration: InputDecoration(
+                                            labelText: 'PIN (4 digits)',
+                                            labelStyle: const TextStyle(
+                                              color: Colors.black54,
+                                            ),
+                                            enabledBorder:
+                                                const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: Colors.black38,
+                                                  ),
+                                                ),
+                                            focusedBorder:
+                                                const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: Colors.brown,
+                                                  ),
+                                                ),
+                                            errorText:
+                                                controller
+                                                        .pinError
+                                                        .value
+                                                        .isEmpty
+                                                    ? null
+                                                    : controller.pinError.value,
+                                            counterText: '',
                                           ),
-                                          enabledBorder:
-                                              const UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Colors.black38,
-                                                ),
-                                              ),
-                                          focusedBorder:
-                                              const UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Colors.brown,
-                                                ),
-                                              ),
-                                          errorText:
-                                              controller
-                                                              .signupPinController
-                                                              .text
-                                                              .length <
-                                                          4 &&
-                                                      controller
-                                                          .signupPinController
-                                                          .text
-                                                          .isNotEmpty
-                                                  ? 'PIN must be 4 digits'
-                                                  : null,
-                                          counterText: '',
                                         ),
                                       ),
                                       const SizedBox(height: 8),

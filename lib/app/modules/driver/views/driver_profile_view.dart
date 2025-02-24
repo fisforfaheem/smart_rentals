@@ -27,8 +27,8 @@ class DriverProfileView extends GetView<DriverController> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(100),
-                      topRight: Radius.circular(100),
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
                       bottomLeft: Radius.circular(30),
                       bottomRight: Radius.circular(30),
                     ),
@@ -44,16 +44,6 @@ class DriverProfileView extends GetView<DriverController> {
 
                     return Column(
                       children: [
-                        const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white24,
-                          child: Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
                         const Text(
                           'Driver Profile',
                           style: TextStyle(
@@ -84,7 +74,7 @@ class DriverProfileView extends GetView<DriverController> {
                               _buildTextField(
                                 'Email',
                                 controller.emailController,
-                                false, // Email should not be editable
+                                false,
                               ),
                               const SizedBox(height: 20),
                               _buildTextField(

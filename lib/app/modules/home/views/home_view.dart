@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../core/utils/animation_helper.dart';
-import '../../car_details/views/car_details_view.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -21,9 +20,9 @@ class HomeView extends GetView<HomeController> {
               const SizedBox(height: 25),
               _buildSearchBar(controller),
               const SizedBox(height: 25),
-              _buildSectionHeader(),
+              _buildAvailableDriversHeader(),
               const SizedBox(height: 15),
-              _buildCarList(controller),
+              _buildDriversList(controller),
             ],
           ),
         ),
@@ -40,7 +39,7 @@ class HomeView extends GetView<HomeController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Welcome Back',
+                'Available Drivers',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -48,14 +47,13 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
               Text(
-                'Find your perfect ride',
+                'Book your ride now',
                 style: TextStyle(fontSize: 16, color: Colors.white70),
               ),
             ],
           ),
           IconButton(
             onPressed: () {
-              // Use Get.find() to get AuthController instance
               final authController = Get.find<AuthController>();
               authController.signOut();
             },
@@ -71,233 +69,187 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildSearchBar(HomeController controller) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      height: controller.searchBarHeight.value,
-      curve: Curves.easeInOut,
-      child: Hero(
-        tag: 'searchBar',
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: controller.searchCars,
-                    decoration: const InputDecoration(
-                      hintText: 'Search for cars...',
-                      hintStyle: TextStyle(color: Colors.white70),
-                      border: InputBorder.none,
-                      icon: Icon(Icons.search, color: Colors.white70),
-                    ),
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: 50,
-                  width: 1,
-                  color: Colors.white30,
-                ),
-                IconButton(
-                  onPressed: controller.toggleSearch,
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Icon(
-                      controller.isSearching.value ? Icons.close : Icons.tune,
-                      key: ValueKey(controller.isSearching.value),
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+      ),
+      child: TextField(
+        style: const TextStyle(color: Colors.white),
+        onChanged: controller.searchCars,
+        decoration: const InputDecoration(
+          hintText: 'Search drivers...',
+          hintStyle: TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+          icon: Icon(Icons.search, color: Colors.white70),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Available Cars',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+  Widget _buildAvailableDriversHeader() {
+    return Obx(() => Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Found ${controller.filteredCars.length} Drivers',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        if (controller.isLoading.value)
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
               color: Colors.white,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              // Show all cars
-            },
-            child: const Text(
-              'View All',
-              style: TextStyle(color: Colors.white70),
-            ),
-          ),
-        ],
-      ),
-    );
+      ],
+    ));
   }
 
-  Widget _buildCarList(HomeController controller) {
+  Widget _buildDriversList(HomeController controller) {
     return Expanded(
       child: Obx(
-        () => AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: ListView.builder(
-            key: ValueKey(controller.filteredCars.length),
-            itemCount: controller.filteredCars.length,
-            itemBuilder: (context, index) {
-              final car = controller.filteredCars[index];
-              return _buildCarCard(car);
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCarCard(CarModel car) {
-    return Hero(
-      tag: 'car_${car.name}',
-      child: Material(
-        color: Colors.transparent,
-        child: AnimationHelper.slideInFromBottom(
-          TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 300),
-            tween: Tween(begin: 0.95, end: 1.0),
-            builder: (context, value, child) {
-              return Transform.scale(
-                scale: value,
-                child: GestureDetector(
-                  onTap: () => Get.toNamed(
-                    '/details',
-                    arguments: {
-                      'name': car.name,
-                      'carModel': car.carModel,
-                      'persons': car.persons,
-                      'price': car.price,
-                      'image': car.image,
-                      'driverImage': car.driverImage,
-                    },
-                  ),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
+        () => ListView.builder(
+          itemCount: controller.filteredCars.length,
+          itemBuilder: (context, index) {
+            final driver = controller.filteredCars[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage(driver.driverImage),
+                        radius: 30,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundImage: AssetImage(car.driverImage),
-                          radius: 25,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                car.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              driver.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                              Text(
-                                car.carModel,
-                                style: const TextStyle(
-                                  fontSize: 16,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Vehicle: ${driver.vehicleColor}',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            Text(
+                              'Plate: ${driver.plateNumber}',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.person_outline,
+                                  size: 16,
                                   color: Colors.white70,
                                 ),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.person_outline,
-                                    size: 16,
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${driver.persons} Seats',
+                                  style: const TextStyle(
                                     color: Colors.white70,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${car.persons} Person',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white70,
-                                    ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  driver.price,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    car.price,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            car.image,
-                            width: 90,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: driver.isBooked
+                          ? driver.isBookedByCurrentUser
+                              ? () => controller.cancelBooking(driver)
+                              : null
+                          : () => controller.bookDriver(driver),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: driver.isBooked
+                            ? driver.isBookedByCurrentUser
+                                ? Colors.red
+                                : Colors.grey
+                            : const Color(0xFFBE9B7B),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            driver.isBooked
+                                ? driver.isBookedByCurrentUser
+                                    ? Icons.cancel
+                                    : Icons.block
+                                : Icons.local_taxi,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            driver.isBooked
+                                ? driver.isBookedByCurrentUser
+                                    ? 'Cancel Booking'
+                                    : 'Not Available'
+                                : 'Book Now',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
+                ],
+              ),
+            );
+          },
         ),
       ),
-    );
-  }
-
-  void _navigateToDetails(CarModel car) {
-    Get.to(
-      () => CarDetailsView(
-        name: car.name,
-        carModel: car.carModel,
-        persons: car.persons,
-        price: car.price,
-        image: car.image,
-        driverImage: car.driverImage,
-      ),
-      transition: Transition.fadeIn,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
     );
   }
 }

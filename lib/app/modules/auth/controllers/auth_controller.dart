@@ -68,22 +68,8 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    // Dispose all controllers
-    loginEmailController.dispose();
-    passwordController.dispose();
-    resetEmailController.dispose();
-    signupNameController.dispose();
-    signupEmailController.dispose();
-    signupPhoneController.dispose();
-    signupPasswordController.dispose();
-    signupPinController.dispose();
-    licenseNumberController.dispose();
-    plateNumberController.dispose();
-    vehicleColorController.dispose();
-    vehicleCapacityController.dispose();
-    carModelController.dispose();
-    carSeatsController.dispose();
-    licensePlateController.dispose();
+    clearLoginFields();
+    clearSignupFields();
     super.onClose();
   }
 
@@ -121,83 +107,93 @@ class AuthController extends GetxController {
   bool validateFields() {
     bool isValid = true;
 
-    // Reset all errors
+    // Reset previous errors
     nameError.value = '';
     emailError.value = '';
     phoneError.value = '';
     passwordError.value = '';
     pinError.value = '';
 
-    // Validate name
-    if (signupNameController.text.isEmpty) {
+    // Name validation
+    if (signupNameController.text.trim().isEmpty) {
       nameError.value = 'Name is required';
+      ToastHelper.showError('Please enter your name');
       isValid = false;
     }
 
-    // Validate email
-    if (signupEmailController.text.isEmpty) {
+    // Email validation
+    if (signupEmailController.text.trim().isEmpty) {
       emailError.value = 'Email is required';
+      ToastHelper.showError('Please enter your email');
       isValid = false;
     } else if (!GetUtils.isEmail(signupEmailController.text.trim())) {
       emailError.value = 'Please enter a valid email';
+      ToastHelper.showError('Please enter a valid email address');
       isValid = false;
     }
 
-    // Validate phone
-    if (signupPhoneController.text.isEmpty) {
+    // Phone validation
+    if (signupPhoneController.text.trim().isEmpty) {
       phoneError.value = 'Phone number is required';
+      ToastHelper.showError('Please enter your phone number');
       isValid = false;
-    } else if (!GetUtils.isPhoneNumber(signupPhoneController.text)) {
+    } else if (!GetUtils.isPhoneNumber(signupPhoneController.text.trim())) {
       phoneError.value = 'Please enter a valid phone number';
+      ToastHelper.showError('Please enter a valid phone number');
       isValid = false;
     }
 
-    // Simplified password validation
-    if (signupPasswordController.text.length < 4) {
+    // Password validation
+    if (signupPasswordController.text.isEmpty) {
+      passwordError.value = 'Password is required';
+      ToastHelper.showError('Please enter a password');
+      isValid = false;
+    } else if (signupPasswordController.text.length < 4) {
       passwordError.value = 'Password must be at least 4 characters';
+      ToastHelper.showError('Password must be at least 4 characters long');
       isValid = false;
     }
 
-    // Validate PIN (simple 4-digit check)
-    if (signupPinController.text.length != 4) {
+    // PIN validation
+    if (signupPinController.text.isEmpty) {
+      pinError.value = 'PIN is required';
+      ToastHelper.showError('Please enter a 4-digit PIN');
+      isValid = false;
+    } else if (signupPinController.text.length != 4) {
       pinError.value = 'PIN must be 4 digits';
+      ToastHelper.showError('PIN must be exactly 4 digits');
       isValid = false;
     }
 
-    // Only validate driver fields if user is registering as a driver
+    // Driver-specific validations
     if (isDriverRegistration.value) {
-      // Validate license number
-      if (licenseNumberController.text.isEmpty) {
+      if (licenseNumberController.text.trim().isEmpty) {
         licenseNumberError.value = 'License number is required';
+        ToastHelper.showError('Please enter your license number');
         isValid = false;
       }
 
-      // Validate plate number
-      if (plateNumberController.text.isEmpty) {
+      if (plateNumberController.text.trim().isEmpty) {
         plateNumberError.value = 'Plate number is required';
+        ToastHelper.showError('Please enter your vehicle plate number');
         isValid = false;
       }
 
-      // Validate vehicle color
-      if (vehicleColorController.text.isEmpty) {
+      if (vehicleColorController.text.trim().isEmpty) {
         vehicleColorError.value = 'Vehicle color is required';
+        ToastHelper.showError('Please enter your vehicle color');
         isValid = false;
       }
 
-      // Validate vehicle capacity
-      if (vehicleCapacityController.text.isEmpty) {
+      if (vehicleCapacityController.text.trim().isEmpty) {
         vehicleCapacityError.value = 'Vehicle capacity is required';
-        isValid = false;
-      } else if (!RegExp(
-        r'^[0-9]+$',
-      ).hasMatch(vehicleCapacityController.text)) {
-        vehicleCapacityError.value = 'Please enter a valid number';
+        ToastHelper.showError('Please enter your vehicle capacity');
         isValid = false;
       }
 
-      // Validate year of manufacture
       if (vehicleYearOfManufacture.value == null) {
         vehicleYomError.value = 'Year of manufacture is required';
+        ToastHelper.showError('Please select vehicle year of manufacture');
         isValid = false;
       }
     }
@@ -208,15 +204,28 @@ class AuthController extends GetxController {
   void clearSignupFields() {
     signupNameController.clear();
     signupEmailController.clear();
-    signupPasswordController.clear();
     signupPhoneController.clear();
-
-    // Clear driver specific fields
-    vehicleColorController.clear();
-    vehicleCapacityController.clear();
+    signupPasswordController.clear();
+    signupPinController.clear();
     licenseNumberController.clear();
     plateNumberController.clear();
+    vehicleColorController.clear();
+    vehicleCapacityController.clear();
     vehicleYearOfManufacture.value = null;
+    isPasswordVisible.value = false;
+    isLoading.value = false;
+
+    // Clear all error states
+    nameError.value = '';
+    emailError.value = '';
+    phoneError.value = '';
+    passwordError.value = '';
+    pinError.value = '';
+    licenseNumberError.value = '';
+    plateNumberError.value = '';
+    vehicleColorError.value = '';
+    vehicleCapacityError.value = '';
+    vehicleYomError.value = '';
   }
 
   void handleSignupError(dynamic e) {
@@ -244,13 +253,6 @@ class AuthController extends GetxController {
       if (!validateFields()) return;
 
       isLoading.value = true;
-
-      // Debug logs for signup
-      debugPrint('=== Starting Signup ===');
-      debugPrint('Basic Info:');
-      debugPrint('Name: ${signupNameController.text}');
-      debugPrint('Email: ${signupEmailController.text}');
-      debugPrint('Phone: ${signupPhoneController.text}');
 
       final userCredential = await _authService.createUserWithEmailAndPassword(
         signupEmailController.text.trim(),
@@ -283,24 +285,14 @@ class AuthController extends GetxController {
                       : null,
             },
           };
-
-          debugPrint('Driver Details:');
-          debugPrint('License: ${licenseNumberController.text}');
-          debugPrint('Plate: ${plateNumberController.text}');
-          debugPrint('Color: ${vehicleColorController.text}');
-          debugPrint('Capacity: ${vehicleCapacityController.text}');
-          debugPrint('Year: ${vehicleYearOfManufacture.value}');
         }
-
-        debugPrint('Saving user data to Firebase:');
-        debugPrint(userData.toString());
 
         await _database
             .child('users')
             .child(userCredential?.user?.uid ?? '')
             .set(userData);
 
-        debugPrint('User data saved successfully');
+        ToastHelper.showSuccess('Registration successful!');
         clearSignupFields();
 
         // Navigate based on role
@@ -312,7 +304,9 @@ class AuthController extends GetxController {
       }
     } catch (e) {
       debugPrint('Error during signup: $e');
-      handleSignupError(e);
+      final errorMessage =
+          _getFirebaseErrorMessage(e.toString()) ?? 'Registration failed';
+      ToastHelper.showError(errorMessage);
     } finally {
       isLoading.value = false;
     }
@@ -604,7 +598,9 @@ class AuthController extends GetxController {
   void clearLoginFields() {
     loginEmailController.clear();
     passwordController.clear();
-    isDriverRegistration.value = false; // Reset the driver registration state
+    isPasswordVisible.value = false;
+    isLoading.value = false;
+    isDriverRegistration.value = false;
   }
 
   // Add method to clear driver fields
@@ -775,5 +771,54 @@ class AuthController extends GetxController {
       ),
       barrierDismissible: false,
     );
+  }
+
+  // Add these methods to AuthController
+  void validateName(String value) {
+    if (value.trim().isEmpty) {
+      nameError.value = 'Name is required';
+    } else {
+      nameError.value = '';
+    }
+  }
+
+  void validateEmail(String value) {
+    if (value.trim().isEmpty) {
+      emailError.value = 'Email is required';
+    } else if (!GetUtils.isEmail(value.trim())) {
+      emailError.value = 'Please enter a valid email';
+    } else {
+      emailError.value = '';
+    }
+  }
+
+  void validatePhone(String value) {
+    if (value.trim().isEmpty) {
+      phoneError.value = 'Phone number is required';
+    } else if (!GetUtils.isPhoneNumber(value.trim())) {
+      phoneError.value = 'Please enter a valid phone number';
+    } else {
+      phoneError.value = '';
+    }
+  }
+
+  void validatePassword(String value) {
+    if (value.isEmpty) {
+      passwordError.value = 'Password is required';
+    } else if (value.length < 4) {
+      passwordError.value = 'Password must be at least 4 characters';
+    } else {
+      passwordError.value = '';
+    }
+  }
+
+  void validatePin(String value) {
+    if (value.isEmpty) {
+      pinError.value = 'PIN is required';
+    } else if (value.length != 4) {
+      pinError.value = 'PIN must be 4 digits';
+    } else {
+      pinError.value = '';
+    }
   }
 }
