@@ -422,9 +422,14 @@ class SignupView extends GetView<AuthController> {
                                                           .vehicleCapacityController,
                                                   keyboardType:
                                                       TextInputType.number,
+                                                  style: const TextStyle(
+                                                    color: Colors.black87,
+                                                  ),
                                                   decoration: InputDecoration(
                                                     labelText:
-                                                        'Vehicle Capacity (seats)',
+                                                        'Vehicle Capacity',
+                                                    hintText:
+                                                        'Enter vehicle capacity',
                                                     labelStyle: const TextStyle(
                                                       color: Colors.black54,
                                                     ),
@@ -452,6 +457,55 @@ class SignupView extends GetView<AuthController> {
                                                             ? null
                                                             : controller
                                                                 .vehicleCapacityError
+                                                                .value,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              AnimationHelper.slideInFromBottom(
+                                                TextField(
+                                                  controller:
+                                                      controller
+                                                          .pricePerHourController,
+                                                  keyboardType:
+                                                      const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                      ),
+                                                  style: const TextStyle(
+                                                    color: Colors.black87,
+                                                  ),
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Price per Hour',
+                                                    hintText:
+                                                        'Enter your price per hour',
+                                                    prefixText: '\$',
+                                                    labelStyle: const TextStyle(
+                                                      color: Colors.black54,
+                                                    ),
+                                                    enabledBorder:
+                                                        const UnderlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                            color:
+                                                                Colors.black38,
+                                                          ),
+                                                        ),
+                                                    focusedBorder:
+                                                        const UnderlineInputBorder(
+                                                          borderSide:
+                                                              BorderSide(
+                                                                color:
+                                                                    Colors
+                                                                        .brown,
+                                                              ),
+                                                        ),
+                                                    errorText:
+                                                        controller
+                                                                .pricePerHourError
+                                                                .value
+                                                                .isEmpty
+                                                            ? null
+                                                            : controller
+                                                                .pricePerHourError
                                                                 .value,
                                                   ),
                                                 ),
@@ -544,33 +598,28 @@ class SignupView extends GetView<AuthController> {
                                                     ),
                                                     const SizedBox(height: 10),
                                                     Obx(
-                                                      () => AnimatedContainer(
-                                                        duration:
-                                                            const Duration(
-                                                              milliseconds: 300,
-                                                            ),
-                                                        child: Wrap(
-                                                          spacing: 12,
-                                                          children: [
-                                                            _buildGenderOption(
-                                                              gender:
-                                                                  Gender.male,
-                                                              label: 'Male',
-                                                              icon: Icons.face,
-                                                              controller:
-                                                                  controller,
-                                                            ),
-                                                            _buildGenderOption(
-                                                              gender:
-                                                                  Gender.female,
-                                                              label: 'Female',
-                                                              icon:
-                                                                  Icons.face_3,
-                                                              controller:
-                                                                  controller,
-                                                            ),
-                                                          ],
-                                                        ),
+                                                      () => Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          _buildGenderOption(
+                                                            gender: Gender.male,
+                                                            icon: Icons.face,
+                                                            controller:
+                                                                controller,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 20,
+                                                          ),
+                                                          _buildGenderOption(
+                                                            gender:
+                                                                Gender.female,
+                                                            icon: Icons.face_3,
+                                                            controller:
+                                                                controller,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ],
@@ -635,7 +684,6 @@ class SignupView extends GetView<AuthController> {
 
   Widget _buildGenderOption({
     required Gender gender,
-    required String label,
     required IconData icon,
     required controller,
   }) {
@@ -647,15 +695,15 @@ class SignupView extends GetView<AuthController> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => controller.setGender(gender),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(50),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color:
                   isSelected
                       ? const Color(0xFFBE9B7B).withOpacity(0.15)
                       : Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              shape: BoxShape.circle,
               border: Border.all(
                 color:
                     isSelected
@@ -674,45 +722,10 @@ class SignupView extends GetView<AuthController> {
                       ]
                       : null,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: EdgeInsets.all(isSelected ? 8 : 6),
-                  decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? const Color(0xFFBE9B7B).withOpacity(0.2)
-                            : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color:
-                        isSelected ? const Color(0xFFBE9B7B) : Colors.black54,
-                    size: isSelected ? 24 : 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color:
-                        isSelected ? const Color(0xFFBE9B7B) : Colors.black54,
-                    fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-                if (isSelected) ...[
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.check_circle,
-                    color: const Color(0xFFBE9B7B),
-                    size: 18,
-                  ),
-                ],
-              ],
+            child: Icon(
+              icon,
+              color: isSelected ? const Color(0xFFBE9B7B) : Colors.black54,
+              size: isSelected ? 32 : 28,
             ),
           ),
         ),

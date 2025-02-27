@@ -6,7 +6,6 @@ class CarModel {
   final String name;
   final String carModel;
   final String persons;
-  final String price;
   final String image;
   final IconData driverIcon;
   final Color driverIconColor;
@@ -17,13 +16,13 @@ class CarModel {
   final bool isBooked;
   final bool isBookedByCurrentUser;
   final Gender gender;
+  final double pricePerHour;
 
   CarModel({
     required this.driverId,
     required this.name,
     required this.carModel,
     required this.persons,
-    required this.price,
     required this.image,
     String? driverImage,
     required this.phoneNumber,
@@ -33,6 +32,7 @@ class CarModel {
     this.isBooked = false,
     this.isBookedByCurrentUser = false,
     required this.gender,
+    required this.pricePerHour,
   }) : driverIcon = _getDriverIcon(gender),
        driverIconColor = _getDriverIconColor(gender);
 

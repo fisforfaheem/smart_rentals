@@ -39,7 +39,7 @@ class DriverHomeView extends GetView<DriverController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Driver Dashboard',
+              '🚗 Driver Dashboard',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -47,7 +47,7 @@ class DriverHomeView extends GetView<DriverController> {
               ),
             ),
             Text(
-              'Monitor your car status',
+              'Monitor your car status 📊',
               style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
           ],
@@ -104,7 +104,7 @@ class DriverHomeView extends GetView<DriverController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Your Car Status',
+            'Your Car Status 🚙',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -161,8 +161,8 @@ class DriverHomeView extends GetView<DriverController> {
                   const SizedBox(width: 12),
                   Text(
                     controller.isBooked.value
-                        ? 'Currently Booked'
-                        : 'Available for Booking',
+                        ? 'Currently Booked 🚫'
+                        : 'Available for Booking ✅',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -259,7 +259,7 @@ class DriverHomeView extends GetView<DriverController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Live Sensor Data',
+                'Live Sensor Data 📡',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -313,7 +313,7 @@ class DriverHomeView extends GetView<DriverController> {
                 ),
                 const SizedBox(height: 15),
                 _buildTemperatureCard(
-                  'Ambient Temperature',
+                  'Environment Temperature',
                   carDetailsController.ambientCelsius.value,
                   carDetailsController.ambientFahrenheit.value,
                 ),
@@ -352,8 +352,8 @@ class DriverHomeView extends GetView<DriverController> {
             const SizedBox(width: 10),
             Text(
               carDetailsController.isAccidentDetected.value
-                  ? 'Accident Detected!'
-                  : 'Vehicle Status: Normal',
+                  ? 'Accident Detected! ⚠️'
+                  : 'Vehicle Status: Normal ✅',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

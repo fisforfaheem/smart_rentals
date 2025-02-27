@@ -61,6 +61,8 @@ class AppPages {
             price: Get.arguments['price'] ?? '',
             image: Get.arguments['image'] ?? '',
             driverImage: Get.arguments['driverImage'] ?? '',
+            pricePerHour:
+                (Get.arguments['pricePerHour'] as num?)?.toDouble() ?? 0.0,
           ),
       binding: CarDetailsBinding(),
       transition: Transition.rightToLeft,

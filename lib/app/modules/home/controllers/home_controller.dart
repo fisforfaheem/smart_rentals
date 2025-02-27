@@ -50,11 +50,19 @@ class HomeController extends GetxController {
             final bookedByUserId = driverBookings[key];
 
             // Parse gender from the stored string
-            Gender gender = Gender.values.firstWhere(
-              (e) =>
-                  e.toString().split('.').last == (value['gender'] ?? 'other'),
-              orElse: () => Gender.other,
-            );
+            final genderStr =
+                value['gender']?.toString().toLowerCase() ?? 'other';
+            Gender gender;
+            switch (genderStr) {
+              case 'male':
+                gender = Gender.male;
+                break;
+              case 'female':
+                gender = Gender.female;
+                break;
+              default:
+                gender = Gender.other;
+            }
 
             // Get vehicle details from the correct path
             final vehicleDetails = value['vehicleDetails'] as Map? ?? {};
@@ -65,7 +73,6 @@ class HomeController extends GetxController {
                 name: value['name'] ?? 'Unknown Driver',
                 carModel: vehicleDetails['model'] ?? 'Vehicle',
                 persons: vehicleDetails['capacity']?.toString() ?? '0',
-                price: '\$${vehicleDetails['price'] ?? 180}/day',
                 image: 'assets/car2.png',
                 phoneNumber: value['phone'] ?? '',
                 vehicleColor: vehicleDetails['color'] ?? '',
@@ -75,6 +82,7 @@ class HomeController extends GetxController {
                 isBookedByCurrentUser:
                     isBooked && bookedByUserId == currentUserId,
                 gender: gender,
+                pricePerHour: (value['pricePerHour'] ?? 0).toDouble(),
               ),
             );
           }
@@ -170,7 +178,7 @@ class HomeController extends GetxController {
               ),
               const SizedBox(height: 16),
               Text(
-                'Price: ${driver.price}',
+                'Hourly Rate: \$${driver.pricePerHour}/hr',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -246,7 +254,7 @@ class HomeController extends GetxController {
           'plateNumber': driver.plateNumber,
           'capacity': driver.persons,
         },
-        'price': driver.price,
+        'hourlyRate': driver.pricePerHour,
       };
 
       // Add booking to database

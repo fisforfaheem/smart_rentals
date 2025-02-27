@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../../data/models/driver_model.dart';
 import '../../../core/utils/animation_helper.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -39,7 +40,7 @@ class HomeView extends GetView<HomeController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Available Drivers',
+                '🚗 Available Drivers',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -47,7 +48,7 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
               Text(
-                'Book your ride now',
+                'Find your ride now! 🌟',
                 style: TextStyle(fontSize: 16, color: Colors.white70),
               ),
             ],
@@ -137,7 +138,7 @@ class HomeView extends GetView<HomeController> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No Drivers Available',
+                  'No Drivers Available 😞',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -163,15 +164,22 @@ class HomeView extends GetView<HomeController> {
             final driver = controller.filteredCars[index];
             return AnimationHelper.slideInFromBottom(
               Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
+                    color: Colors.white.withOpacity(0.4),
+                    width: 1.5,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -181,17 +189,26 @@ class HomeView extends GetView<HomeController> {
                           tag: 'driver_${driver.driverId}',
                           child: CircleAvatar(
                             backgroundColor: driver.driverIconColor.withOpacity(
-                              0.1,
+                              0.2,
                             ),
-                            radius: 30,
+                            radius: 40,
                             child: Icon(
-                              driver.driverIcon,
-                              color: driver.driverIconColor,
-                              size: 30,
+                              driver.gender == Gender.male
+                                  ? Icons.male
+                                  : driver.gender == Gender.female
+                                  ? Icons.female
+                                  : Icons.person,
+                              color:
+                                  driver.gender == Gender.male
+                                      ? Colors.blue
+                                      : driver.gender == Gender.female
+                                      ? Colors.pink
+                                      : Colors.grey,
+                              size: 35,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 20),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,42 +216,41 @@ class HomeView extends GetView<HomeController> {
                               Text(
                                 driver.name,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               if (driver.vehicleColor.isNotEmpty)
                                 Text(
-                                  'Vehicle: ${driver.vehicleColor}',
+                                  '🚙 Vehicle: ${driver.vehicleColor}',
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                               if (driver.plateNumber.isNotEmpty)
                                 Text(
-                                  'Plate: ${driver.plateNumber}',
+                                  '🔖 Plate: ${driver.plateNumber}',
                                   style: const TextStyle(color: Colors.white70),
                                 ),
+                              Text(
+                                '💲 Price: \$${driver.pricePerHour}/hr',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               Row(
                                 children: [
                                   const Icon(
-                                    Icons.person_outline,
-                                    size: 16,
+                                    Icons.event_seat,
+                                    size: 18,
                                     color: Colors.white70,
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 6),
                                   Text(
                                     '${driver.persons} Seats',
                                     style: const TextStyle(
                                       color: Colors.white70,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Text(
-                                    driver.price,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
@@ -244,7 +260,7 @@ class HomeView extends GetView<HomeController> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -262,9 +278,9 @@ class HomeView extends GetView<HomeController> {
                                       : Colors.grey
                                   : const Color(0xFFBE9B7B),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -276,9 +292,9 @@ class HomeView extends GetView<HomeController> {
                                       : Icons.block
                                   : Icons.local_taxi,
                               color: Colors.white,
-                              size: 18,
+                              size: 20,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             Text(
                               driver.isBooked
                                   ? driver.isBookedByCurrentUser
@@ -287,7 +303,7 @@ class HomeView extends GetView<HomeController> {
                                   : 'Book Now',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

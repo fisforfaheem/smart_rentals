@@ -48,6 +48,7 @@ class AuthController extends GetxController {
   final TextEditingController vehicleCapacityController =
       TextEditingController();
   final TextEditingController vehicleModelController = TextEditingController();
+  final TextEditingController pricePerHourController = TextEditingController();
   final Rx<DateTime?> vehicleYearOfManufacture = Rx<DateTime?>(null);
 
   // Driver-specific error states
@@ -56,6 +57,7 @@ class AuthController extends GetxController {
   final RxString vehicleColorError = ''.obs;
   final RxString vehicleCapacityError = ''.obs;
   final RxString vehicleYomError = ''.obs;
+  final RxString pricePerHourError = ''.obs;
 
   @override
   void onClose() {
@@ -98,12 +100,18 @@ class AuthController extends GetxController {
   bool validateFields() {
     bool isValid = true;
 
-    // Reset previous errors
+    // Reset all error states
     nameError.value = '';
     emailError.value = '';
     phoneError.value = '';
     passwordError.value = '';
     pinError.value = '';
+    licenseNumberError.value = '';
+    plateNumberError.value = '';
+    vehicleColorError.value = '';
+    vehicleCapacityError.value = '';
+    vehicleYomError.value = '';
+    pricePerHourError.value = '';
 
     // Name validation
     if (signupNameController.text.trim().isEmpty) {
@@ -187,6 +195,19 @@ class AuthController extends GetxController {
         ToastHelper.showError('Please select vehicle year of manufacture');
         isValid = false;
       }
+
+      if (pricePerHourController.text.trim().isEmpty) {
+        pricePerHourError.value = 'Price per hour is required';
+        ToastHelper.showError('Please enter your price per hour');
+        isValid = false;
+      } else {
+        final price = double.tryParse(pricePerHourController.text.trim());
+        if (price == null || price <= 0) {
+          pricePerHourError.value = 'Please enter a valid price';
+          ToastHelper.showError('Please enter a valid price per hour');
+          isValid = false;
+        }
+      }
     }
 
     return isValid;
@@ -202,6 +223,7 @@ class AuthController extends GetxController {
     plateNumberController.clear();
     vehicleColorController.clear();
     vehicleCapacityController.clear();
+    pricePerHourController.clear();
     vehicleYearOfManufacture.value = null;
     isPasswordVisible.value = false;
     isLoading.value = false;
@@ -219,6 +241,7 @@ class AuthController extends GetxController {
     vehicleColorError.value = '';
     vehicleCapacityError.value = '';
     vehicleYomError.value = '';
+    pricePerHourError.value = '';
   }
 
   void handleSignupError(dynamic e) {
@@ -278,6 +301,9 @@ class AuthController extends GetxController {
           };
           userData['isAvailable'] = true;
           userData['isBooked'] = false;
+          userData['pricePerHour'] = double.parse(
+            pricePerHourController.text.trim(),
+          );
         }
 
         await _database.child('users').child(userId).set(userData);

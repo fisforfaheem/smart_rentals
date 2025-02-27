@@ -9,15 +9,17 @@ class CarDetailsView extends GetView<CarDetailsController> {
   final String price;
   final String image;
   final String driverImage;
+  final double pricePerHour;
 
   const CarDetailsView({
+    super.key,
     required this.name,
     required this.carModel,
     required this.persons,
     required this.price,
     required this.image,
     required this.driverImage,
-    super.key,
+    required this.pricePerHour,
   });
 
   @override
@@ -94,7 +96,7 @@ class CarDetailsView extends GetView<CarDetailsController> {
 
                             // Temperature Readings
                             _buildTemperatureCard(
-                              'Ambient Temperature',
+                              'Environment Temperature',
                               controller.ambientCelsius.value,
                               controller.ambientFahrenheit.value,
                             ),
@@ -106,6 +108,46 @@ class CarDetailsView extends GetView<CarDetailsController> {
                             ),
                           ],
                         ),
+                      ),
+
+                      // Price and Persons Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.attach_money,
+                                color: Colors.brown,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '\$$pricePerHour/hr',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.brown,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.person_outline,
+                                color: Colors.brown,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$persons persons',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.brown,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),

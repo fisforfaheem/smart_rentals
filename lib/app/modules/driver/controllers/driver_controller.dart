@@ -20,6 +20,7 @@ class DriverController extends GetxController {
   final vehicleColorController = TextEditingController();
   final vehicleCapacityController = TextEditingController();
   final yearOfManufactureController = TextEditingController();
+  final pricePerHourController = TextEditingController();
 
   final isEditing = false.obs;
   final isLoading = false.obs;
@@ -47,6 +48,7 @@ class DriverController extends GetxController {
     vehicleColorController.dispose();
     vehicleCapacityController.dispose();
     yearOfManufactureController.dispose();
+    pricePerHourController.dispose();
     super.onClose();
   }
 
@@ -63,33 +65,37 @@ class DriverController extends GetxController {
       if (snapshot.exists) {
         final userData = snapshot.value as Map<dynamic, dynamic>;
 
+        // Set observable values for profile display
+        name.value = userData['name'] ?? '';
+        email.value = userData['email'] ?? '';
+        isAvailable.value = userData['isAvailable'] ?? true;
+
         // Basic user data
         nameController.text = userData['name'] ?? '';
         emailController.text = userData['email'] ?? '';
         phoneController.text = userData['phone'] ?? '';
         pinController.text = userData['pin'] ?? '';
+        pricePerHourController.text =
+            (userData['pricePerHour'] ?? '0').toString();
 
         // Driver specific data
-        if (userData['driverDetails'] != null) {
-          final driverDetails =
-              userData['driverDetails'] as Map<dynamic, dynamic>;
-          licenseNumberController.text = driverDetails['licenseNumber'] ?? '';
-
-          if (driverDetails['vehicleDetails'] != null) {
-            final vehicleDetails =
-                driverDetails['vehicleDetails'] as Map<dynamic, dynamic>;
-            plateNumberController.text = vehicleDetails['plateNumber'] ?? '';
-            vehicleColorController.text = vehicleDetails['color'] ?? '';
-            vehicleCapacityController.text =
-                vehicleDetails['capacity']?.toString() ?? '';
-            yearOfManufactureController.text =
-                vehicleDetails['yearOfManufacture'] ?? '';
-          }
+        if (userData['vehicleDetails'] != null) {
+          final vehicleDetails =
+              userData['vehicleDetails'] as Map<dynamic, dynamic>;
+          plateNumberController.text = vehicleDetails['plateNumber'] ?? '';
+          vehicleColorController.text = vehicleDetails['color'] ?? '';
+          vehicleCapacityController.text =
+              vehicleDetails['capacity']?.toString() ?? '';
+          yearOfManufactureController.text =
+              vehicleDetails['yearOfManufacture'] ?? '';
+          licenseNumberController.text = vehicleDetails['licenseNumber'] ?? '';
         }
 
         // Parse gender from the stored string
+        final genderStr =
+            userData['gender']?.toString().toLowerCase() ?? 'other';
         gender.value = Gender.values.firstWhere(
-          (e) => e.toString() == userData['gender'],
+          (g) => g.toString().split('.').last.toLowerCase() == genderStr,
           orElse: () => Gender.other,
         );
       }
@@ -113,19 +119,23 @@ class DriverController extends GetxController {
       final updates = {
         'name': nameController.text.trim(),
         'phone': phoneController.text.trim(),
-        'driverDetails': {
+        'pricePerHour':
+            double.tryParse(pricePerHourController.text.trim()) ?? 0,
+        'gender': gender.value.toString().split('.').last.toLowerCase(),
+        'vehicleDetails': {
+          'plateNumber': plateNumberController.text.trim(),
+          'color': vehicleColorController.text.trim(),
+          'capacity': vehicleCapacityController.text.trim(),
+          'yearOfManufacture': yearOfManufactureController.text.trim(),
           'licenseNumber': licenseNumberController.text.trim(),
-          'vehicleDetails': {
-            'plateNumber': plateNumberController.text.trim(),
-            'color': vehicleColorController.text.trim(),
-            'capacity': vehicleCapacityController.text.trim(),
-            'yearOfManufacture': yearOfManufactureController.text.trim(),
-          },
         },
-        'gender': gender.value.toString(),
       };
 
       await _database.child('users').child(userId).update(updates);
+
+      // Update observable values
+      name.value = nameController.text.trim();
+      email.value = emailController.text.trim();
 
       isEditing.value = false;
       ToastHelper.showSuccess('Profile updated successfully');
@@ -265,6 +275,28 @@ class DriverController extends GetxController {
       debugPrint('Error toggling availability: $e');
       // Revert the value if the update failed
       isAvailable.value = !isAvailable.value;
+      ToastHelper.showError('Failed to update availability');
+    }
+  }
+
+  Future<void> pickYearOfManufacture(BuildContext context) async {
+    try {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(1990),
+        lastDate: DateTime.now(),
+        initialDatePickerMode: DatePickerMode.year,
+      );
+
+      if (picked != null) {
+        yearOfManufactureController.text = DateFormat(
+          'yyyy-MM-dd',
+        ).format(picked);
+      }
+    } catch (e) {
+      debugPrint('Error picking date: $e');
+      ToastHelper.showError('Failed to pick date');
     }
   }
 }
