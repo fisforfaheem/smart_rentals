@@ -90,166 +90,219 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildAvailableDriversHeader() {
-    return Obx(() => Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Found ${controller.filteredCars.length} Drivers',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        if (controller.isLoading.value)
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
+    return Obx(
+      () => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Found ${controller.filteredCars.length} Drivers',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-      ],
-    ));
+          if (controller.isLoading.value)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDriversList(HomeController controller) {
     return Expanded(
-      child: Obx(
-        () => ListView.builder(
+      child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        }
+
+        if (controller.filteredCars.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.no_transfer_rounded,
+                  size: 64,
+                  color: Colors.white.withOpacity(0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No Drivers Available',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please check back later',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
           itemCount: controller.filteredCars.length,
           itemBuilder: (context, index) {
             final driver = controller.filteredCars[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
+            return AnimationHelper.slideInFromBottom(
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: AssetImage(driver.driverImage),
-                        radius: 30,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              driver.name,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Hero(
+                          tag: 'driver_${driver.driverId}',
+                          child: CircleAvatar(
+                            backgroundColor: driver.driverIconColor.withOpacity(
+                              0.1,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Vehicle: ${driver.vehicleColor}',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                              ),
+                            radius: 30,
+                            child: Icon(
+                              driver.driverIcon,
+                              color: driver.driverIconColor,
+                              size: 30,
                             ),
-                            Text(
-                              'Plate: ${driver.plateNumber}',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.person_outline,
-                                  size: 16,
-                                  color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                driver.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                                const SizedBox(width: 4),
+                              ),
+                              const SizedBox(height: 4),
+                              if (driver.vehicleColor.isNotEmpty)
                                 Text(
-                                  '${driver.persons} Seats',
-                                  style: const TextStyle(
+                                  'Vehicle: ${driver.vehicleColor}',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              if (driver.plateNumber.isNotEmpty)
+                                Text(
+                                  'Plate: ${driver.plateNumber}',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person_outline,
+                                    size: 16,
                                     color: Colors.white70,
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  driver.price,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${driver.persons} Seats',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    driver.price,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            driver.isBooked
+                                ? driver.isBookedByCurrentUser
+                                    ? () => controller.cancelBooking(driver)
+                                    : null
+                                : () => controller.bookDriver(driver),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              driver.isBooked
+                                  ? driver.isBookedByCurrentUser
+                                      ? Colors.red
+                                      : Colors.grey
+                                  : const Color(0xFFBE9B7B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              driver.isBooked
+                                  ? driver.isBookedByCurrentUser
+                                      ? Icons.cancel
+                                      : Icons.block
+                                  : Icons.local_taxi,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              driver.isBooked
+                                  ? driver.isBookedByCurrentUser
+                                      ? 'Cancel Booking'
+                                      : 'Not Available'
+                                  : 'Book Now',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: driver.isBooked
-                          ? driver.isBookedByCurrentUser
-                              ? () => controller.cancelBooking(driver)
-                              : null
-                          : () => controller.bookDriver(driver),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: driver.isBooked
-                            ? driver.isBookedByCurrentUser
-                                ? Colors.red
-                                : Colors.grey
-                            : const Color(0xFFBE9B7B),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            driver.isBooked
-                                ? driver.isBookedByCurrentUser
-                                    ? Icons.cancel
-                                    : Icons.block
-                                : Icons.local_taxi,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            driver.isBooked
-                                ? driver.isBookedByCurrentUser
-                                    ? 'Cancel Booking'
-                                    : 'Not Available'
-                                : 'Book Now',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              delay: index * 0.1,
             );
           },
-        ),
-      ),
+        );
+      }),
     );
   }
 }

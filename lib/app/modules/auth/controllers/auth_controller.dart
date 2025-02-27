@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/toast_helper.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/driver_model.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/biometric_service.dart';
 import 'package:flutter/services.dart'; // Add this import for TextInputFormatters
@@ -18,6 +19,7 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isPasswordVisible = false.obs;
   final RxBool isDriverRegistration = false.obs;
+  final Rx<Gender> selectedGender = Gender.male.obs;
 
   // Form validation
   final RxString nameError = ''.obs;
@@ -26,11 +28,12 @@ class AuthController extends GetxController {
   final RxString passwordError = ''.obs;
   final RxString pinError = ''.obs;
 
+  // Login controllers
   final TextEditingController loginEmailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController resetEmailController = TextEditingController();
 
-  // Add these controllers
+  // Signup controllers
   final TextEditingController signupNameController = TextEditingController();
   final TextEditingController signupEmailController = TextEditingController();
   final TextEditingController signupPhoneController = TextEditingController();
@@ -38,33 +41,21 @@ class AuthController extends GetxController {
       TextEditingController();
   final TextEditingController signupPinController = TextEditingController();
 
-  // Add driver-specific controllers
+  // Driver-specific controllers
   final TextEditingController licenseNumberController = TextEditingController();
   final TextEditingController plateNumberController = TextEditingController();
   final TextEditingController vehicleColorController = TextEditingController();
   final TextEditingController vehicleCapacityController =
       TextEditingController();
+  final TextEditingController vehicleModelController = TextEditingController();
   final Rx<DateTime?> vehicleYearOfManufacture = Rx<DateTime?>(null);
 
-  // Add driver-specific error states
+  // Driver-specific error states
   final RxString licenseNumberError = ''.obs;
   final RxString plateNumberError = ''.obs;
   final RxString vehicleColorError = ''.obs;
   final RxString vehicleCapacityError = ''.obs;
   final RxString vehicleYomError = ''.obs;
-
-  // Text Controllers for signup
-  final TextEditingController carModelController = TextEditingController();
-  final TextEditingController carSeatsController = TextEditingController();
-  final TextEditingController licensePlateController = TextEditingController();
-
-  // Driver specific controllers
-  final vehicleModelController = TextEditingController();
-  // final plateNumberController = TextEditingController();
-  // final vehicleColorController = TextEditingController();
-  // final vehicleCapacityController = TextEditingController();
-  // final licenseNumberController = TextEditingController();
-  // final vehicleYearOfManufacture = Rx<DateTime?>(null);
 
   @override
   void onClose() {
@@ -214,6 +205,8 @@ class AuthController extends GetxController {
     vehicleYearOfManufacture.value = null;
     isPasswordVisible.value = false;
     isLoading.value = false;
+    isDriverRegistration.value = false;
+    selectedGender.value = Gender.male;
 
     // Clear all error states
     nameError.value = '';
@@ -249,98 +242,95 @@ class AuthController extends GetxController {
   }
 
   Future<void> handleSignup() async {
-    try {
-      if (!validateFields()) return;
+    if (!validateFields()) return;
 
+    try {
       isLoading.value = true;
 
-      final userCredential = await _authService.createUserWithEmailAndPassword(
+      final credential = await _authService.createUserWithEmailAndPassword(
         signupEmailController.text.trim(),
         signupPasswordController.text,
       );
 
-      if (userCredential?.user != null) {
-        // Create base user data
-        final Map<String, dynamic> userData = {
+      if (credential?.user != null) {
+        final userId = credential!.user!.uid;
+        final userRole = isDriverRegistration.value ? 'driver' : 'user';
+
+        final userData = {
           'name': signupNameController.text.trim(),
           'email': signupEmailController.text.trim(),
           'phone': signupPhoneController.text.trim(),
           'pin': signupPinController.text,
-          'role': isDriverRegistration.value ? 'driver' : 'user',
+          'createdAt': ServerValue.timestamp,
+          'role': userRole,
+          'gender': selectedGender.value.toString().split('.').last,
         };
 
-        // Add driver-specific data if registering as a driver
         if (isDriverRegistration.value) {
-          userData['driverDetails'] = {
-            'licenseNumber': licenseNumberController.text,
-            'vehicleDetails': {
-              'plateNumber': plateNumberController.text,
-              'color': vehicleColorController.text,
-              'capacity': vehicleCapacityController.text,
-              'yearOfManufacture':
-                  vehicleYearOfManufacture.value != null
-                      ? DateFormat(
-                        'yyyy',
-                      ).format(vehicleYearOfManufacture.value!)
-                      : null,
-            },
+          // Add driver-specific data
+          userData['vehicleDetails'] = {
+            'plateNumber': plateNumberController.text.trim(),
+            'color': vehicleColorController.text.trim(),
+            'capacity': int.parse(vehicleCapacityController.text.trim()),
+            'yearOfManufacture':
+                vehicleYearOfManufacture.value?.toIso8601String(),
+            'licenseNumber': licenseNumberController.text.trim(),
           };
+          userData['isAvailable'] = true;
+          userData['isBooked'] = false;
         }
 
-        await _database
-            .child('users')
-            .child(userCredential?.user?.uid ?? '')
-            .set(userData);
+        await _database.child('users').child(userId).set(userData);
 
-        ToastHelper.showSuccess('Registration successful!');
         clearSignupFields();
+        ToastHelper.showSuccess('Account created successfully');
 
-        // Navigate based on role
-        if (isDriverRegistration.value) {
+        // Route based on role
+        if (userRole == 'driver') {
           Get.offAllNamed('/driver-home');
         } else {
           Get.offAllNamed('/home');
         }
       }
     } catch (e) {
-      debugPrint('Error during signup: $e');
-      final errorMessage =
-          _getFirebaseErrorMessage(e.toString()) ?? 'Registration failed';
-      ToastHelper.showError(errorMessage);
+      handleSignupError(e);
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> signIn(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
-      ToastHelper.showError('Please enter both email and password');
-      return;
-    }
-
-    if (!GetUtils.isEmail(email)) {
-      ToastHelper.showError('Please enter a valid email');
-      return;
-    }
-
+  Future<void> handleLogin() async {
     try {
       isLoading.value = true;
-      final UserCredential? result = await _authService
-          .signInWithEmailAndPassword(email, password);
 
-      if (result?.user != null) {
-        clearLoginFields();
-        // Show PIN verification dialog instead of direct navigation
-        showPinVerificationDialog(result!.user!.uid);
-      } else {
-        ToastHelper.showError('Login failed');
+      final credential = await _authService.signInWithEmailAndPassword(
+        loginEmailController.text.trim(),
+        passwordController.text,
+      );
+
+      if (credential?.user != null) {
+        final userId = credential!.user!.uid;
+        final userSnapshot = await _database.child('users').child(userId).get();
+
+        if (userSnapshot.exists) {
+          final userData = userSnapshot.value as Map<dynamic, dynamic>;
+          final userRole = userData['role'] as String?;
+
+          clearLoginFields();
+          ToastHelper.showSuccess('Login successful');
+
+          // Route based on role
+          if (userRole == 'driver') {
+            Get.offAllNamed('/driver-home');
+          } else {
+            Get.offAllNamed('/home');
+          }
+        } else {
+          ToastHelper.showError('User data not found');
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      String message =
-          _getFirebaseErrorMessage(e.code) ?? e.message ?? 'An error occurred';
-      ToastHelper.showError(message);
     } catch (e) {
-      ToastHelper.showError('An unexpected error occurred');
+      handleLoginError(e);
     } finally {
       isLoading.value = false;
     }
@@ -405,195 +395,6 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> handleLogin() async {
-    try {
-      // First check if email is empty
-      if (loginEmailController.text.trim().isEmpty) {
-        ToastHelper.showError('Please enter your email');
-        return;
-      }
-
-      // Check if password is empty
-      if (passwordController.text.isEmpty) {
-        ToastHelper.showError('Please enter your password');
-        return;
-      }
-
-      isLoading.value = true;
-
-      // Get user data first to check role
-      final userCredential = await _authService.signInWithEmailAndPassword(
-        loginEmailController.text.trim(),
-        passwordController.text,
-      );
-
-      if (userCredential != null) {
-        // Get user role from database
-        final userSnapshot =
-            await FirebaseDatabase.instance
-                .ref()
-                .child('users')
-                .child(userCredential.user!.uid)
-                .get();
-
-        if (userSnapshot.exists) {
-          final userData = userSnapshot.value as Map<dynamic, dynamic>;
-          final userRole = userData['role'] as String?;
-
-          // Check if role matches selection
-          if (isDriverRegistration.value && userRole != 'driver') {
-            isLoading.value = false;
-            await _authService.signOut();
-            ToastHelper.showError('This account is not registered as a driver');
-            return;
-          }
-
-          if (!isDriverRegistration.value && userRole == 'driver') {
-            isLoading.value = false;
-            await _authService.signOut();
-            ToastHelper.showError(
-              'Please use driver login for driver accounts',
-            );
-            return;
-          }
-
-          // Navigate based on role
-          if (userRole == 'driver') {
-            Get.offAllNamed('/driver-home');
-          } else {
-            Get.offAllNamed('/home');
-          }
-        }
-      }
-    } catch (e) {
-      isLoading.value = false;
-      if (e is FirebaseAuthException) {
-        switch (e.code) {
-          case 'user-not-found':
-            ToastHelper.showError('No user found with this email');
-            break;
-          case 'wrong-password':
-            ToastHelper.showError('Invalid password');
-            break;
-          case 'invalid-email':
-            ToastHelper.showError('Invalid email format');
-            break;
-          default:
-            ToastHelper.showError('Login failed: ${e.message}');
-        }
-      } else {
-        ToastHelper.showError('An unexpected error occurred');
-      }
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void showResetPasswordDialog() {
-    resetEmailController.clear();
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color(0xFFF5E6D3),
-        title: const Text(
-          'Reset Password',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF4A4A4A),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Enter your email address to receive a password reset link.',
-              style: TextStyle(fontSize: 14, color: Color(0xFF4A4A4A)),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: resetEmailController,
-              keyboardType: TextInputType.emailAddress,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                labelStyle: const TextStyle(color: Colors.black54),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFBE9B7B)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFBE9B7B),
-                    width: 2,
-                  ),
-                ),
-                prefixIcon: const Icon(
-                  Icons.email_outlined,
-                  color: Color(0xFFBE9B7B),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Get.closeAllDialogs(),
-                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              Expanded(
-                child: Obx(
-                  () => ElevatedButton(
-                    onPressed:
-                        isLoading.value
-                            ? null
-                            : () => forgotPassword(
-                              resetEmailController.text.trim(),
-                            ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFBE9B7B),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child:
-                        isLoading.value
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                            : const Text(
-                              'Send Reset Link',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   // Clear login fields
   void clearLoginFields() {
     loginEmailController.clear();
@@ -626,7 +427,7 @@ class AuthController extends GetxController {
     }
   }
 
-  // Add this method to verify PIN
+  // Update the PIN verification method to handle roles
   Future<void> verifyPinAndNavigate(String enteredPin, String uid) async {
     try {
       isLoading.value = true;
@@ -637,10 +438,18 @@ class AuthController extends GetxController {
       if (userSnapshot.exists) {
         final userData = userSnapshot.value as Map<dynamic, dynamic>;
         final storedPin = userData['pin'] as String;
+        final userRole = userData['role'] as String?;
 
         if (storedPin == enteredPin) {
           Get.closeAllDialogs(); // Close PIN dialog
-          Get.offAllNamed('/home');
+
+          // Route based on role
+          if (userRole == 'driver') {
+            Get.offAllNamed('/driver-home');
+          } else {
+            Get.offAllNamed('/home');
+          }
+
           ToastHelper.showSuccess('Welcome back!');
         } else {
           ToastHelper.showError('Incorrect PIN');
@@ -655,7 +464,7 @@ class AuthController extends GetxController {
     }
   }
 
-  // Update the PIN verification dialog
+  // Update the showPinVerificationDialog to handle roles
   void showPinVerificationDialog(String uid) {
     final TextEditingController pinController = TextEditingController();
 
@@ -713,6 +522,7 @@ class AuthController extends GetxController {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(4),
               ],
+              onSubmitted: (_) => verifyPinAndNavigate(pinController.text, uid),
             ),
           ],
         ),
@@ -820,5 +630,142 @@ class AuthController extends GetxController {
     } else {
       pinError.value = '';
     }
+  }
+
+  void setGender(Gender gender) {
+    selectedGender.value = gender;
+  }
+
+  void handleLoginError(dynamic e) {
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'user-not-found':
+          ToastHelper.showError('No user found with this email');
+          break;
+        case 'wrong-password':
+          ToastHelper.showError('Invalid password');
+          break;
+        case 'invalid-email':
+          ToastHelper.showError('Invalid email format');
+          break;
+        case 'user-disabled':
+          ToastHelper.showError('This account has been disabled');
+          break;
+        case 'too-many-requests':
+          ToastHelper.showError(
+            'Too many login attempts. Please try again later',
+          );
+          break;
+        default:
+          ToastHelper.showError('Login failed: ${e.message}');
+      }
+    } else {
+      ToastHelper.showError('An unexpected error occurred');
+    }
+  }
+
+  void showResetPasswordDialog() {
+    resetEmailController.clear();
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFF5E6D3),
+        title: const Text(
+          'Reset Password',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF4A4A4A),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter your email address to receive a password reset link.',
+              style: TextStyle(fontSize: 14, color: Color(0xFF4A4A4A)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                labelStyle: const TextStyle(color: Colors.black54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFBE9B7B)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFBE9B7B),
+                    width: 2,
+                  ),
+                ),
+                prefixIcon: const Icon(
+                  Icons.email_outlined,
+                  color: Color(0xFFBE9B7B),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Get.back(),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed:
+                        isLoading.value
+                            ? null
+                            : () => forgotPassword(
+                              resetEmailController.text.trim(),
+                            ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFBE9B7B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child:
+                        isLoading.value
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Send Reset Link',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 }

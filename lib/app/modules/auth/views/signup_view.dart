@@ -4,6 +4,7 @@ import '../controllers/auth_controller.dart';
 import '../../../core/utils/animation_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../../data/models/driver_model.dart';
 
 class SignupView extends GetView<AuthController> {
   const SignupView({super.key});
@@ -526,6 +527,55 @@ class SignupView extends GetView<AuthController> {
                                                   ),
                                                 ),
                                               ),
+                                              const SizedBox(height: 20),
+                                              AnimationHelper.slideInFromBottom(
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Gender',
+                                                      style: TextStyle(
+                                                        color: Colors.black54,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    Obx(
+                                                      () => AnimatedContainer(
+                                                        duration:
+                                                            const Duration(
+                                                              milliseconds: 300,
+                                                            ),
+                                                        child: Wrap(
+                                                          spacing: 12,
+                                                          children: [
+                                                            _buildGenderOption(
+                                                              gender:
+                                                                  Gender.male,
+                                                              label: 'Male',
+                                                              icon: Icons.face,
+                                                              controller:
+                                                                  controller,
+                                                            ),
+                                                            _buildGenderOption(
+                                                              gender:
+                                                                  Gender.female,
+                                                              label: 'Female',
+                                                              icon:
+                                                                  Icons.face_3,
+                                                              controller:
+                                                                  controller,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ],
                                           )
                                           : const SizedBox.shrink(),
@@ -580,6 +630,93 @@ class SignupView extends GetView<AuthController> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildGenderOption({
+    required Gender gender,
+    required String label,
+    required IconData icon,
+    required controller,
+  }) {
+    final isSelected = controller.selectedGender.value == gender;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => controller.setGender(gender),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color:
+                  isSelected
+                      ? const Color(0xFFBE9B7B).withOpacity(0.15)
+                      : Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color:
+                    isSelected
+                        ? const Color(0xFFBE9B7B)
+                        : Colors.black38.withOpacity(0.3),
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow:
+                  isSelected
+                      ? [
+                        BoxShadow(
+                          color: const Color(0xFFBE9B7B).withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                      : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: EdgeInsets.all(isSelected ? 8 : 6),
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? const Color(0xFFBE9B7B).withOpacity(0.2)
+                            : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color:
+                        isSelected ? const Color(0xFFBE9B7B) : Colors.black54,
+                    size: isSelected ? 24 : 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color:
+                        isSelected ? const Color(0xFFBE9B7B) : Colors.black54,
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.check_circle,
+                    color: const Color(0xFFBE9B7B),
+                    size: 18,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

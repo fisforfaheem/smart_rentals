@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/driver_controller.dart';
+import '../../../data/models/driver_model.dart';
 
 class DriverProfileView extends GetView<DriverController> {
   const DriverProfileView({super.key});
@@ -10,185 +11,108 @@ class DriverProfileView extends GetView<DriverController> {
     return Scaffold(
       backgroundColor: const Color(0xFFD2B48C),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black54),
-                  onPressed: () => Get.back(),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Obx(() {
-                    if (controller.isLoading.value) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFBE9B7B),
-                        ),
-                      );
-                    }
-
-                    return Column(
-                      children: [
-                        const Text(
-                          'Driver Profile',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4A4A4A),
-                          ),
-                        ),
-                        const Text(
-                          'Update Your Information',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF4A4A4A),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
+        child: Obx(
+          () =>
+              controller.isLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
                             children: [
-                              _buildTextField(
-                                'Name',
-                                controller.nameController,
-                                controller.isEditing.value,
+                              CircleAvatar(
+                                radius: 60,
+                                backgroundColor: _getGenderColor(
+                                  controller.gender.value,
+                                ).withOpacity(0.1),
+                                child: Icon(
+                                  _getGenderIcon(controller.gender.value),
+                                  size: 60,
+                                  color: _getGenderColor(
+                                    controller.gender.value,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Email',
-                                controller.emailController,
-                                false,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Phone Number',
-                                controller.phoneController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'License Number',
-                                controller.licenseNumberController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Vehicle Plate Number',
-                                controller.plateNumberController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Vehicle Color',
-                                controller.vehicleColorController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Vehicle Capacity',
-                                controller.vehicleCapacityController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 20),
-                              _buildTextField(
-                                'Year of Manufacture',
-                                controller.yearOfManufactureController,
-                                controller.isEditing.value,
-                              ),
-                              const SizedBox(height: 40),
-
-                              SizedBox(
-                                width: double.infinity,
-                                height: 45,
-                                child: ElevatedButton(
-                                  onPressed:
-                                      controller.isLoading.value
-                                          ? null
-                                          : () {
-                                            if (controller.isEditing.value) {
-                                              controller.updateProfile();
-                                            } else {
-                                              controller.isEditing.value = true;
-                                            }
-                                          },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFBE9B7B),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.brown,
+                                      width: 2,
                                     ),
                                   ),
-                                  child:
-                                      controller.isLoading.value
-                                          ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                          : Text(
-                                            controller.isEditing.value
-                                                ? 'SAVE'
-                                                : 'EDIT',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
+                                  child: InkWell(
+                                    onTap: controller.toggleAvailability,
+                                    child: Icon(
+                                      controller.isAvailable.value
+                                          ? Icons.check_circle
+                                          : Icons.do_not_disturb,
+                                      color:
+                                          controller.isAvailable.value
+                                              ? Colors.green
+                                              : Colors.red,
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            controller.name.value,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            controller.email.value,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          // Rest of the profile view...
+                        ],
+                      ),
+                    ),
+                  ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController textController,
-    bool isEditing,
-  ) {
-    return TextField(
-      controller: textController,
-      enabled: isEditing,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.black54),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.black38),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.brown),
-        ),
-      ),
-    );
+  IconData _getGenderIcon(Gender gender) {
+    switch (gender) {
+      case Gender.male:
+        return Icons.face;
+      case Gender.female:
+        return Icons.face_3;
+      case Gender.other:
+        return Icons.person_outline;
+    }
+  }
+
+  Color _getGenderColor(Gender gender) {
+    switch (gender) {
+      case Gender.male:
+        return Colors.blue;
+      case Gender.female:
+        return Colors.pink;
+      case Gender.other:
+        return Colors.grey;
+    }
   }
 }

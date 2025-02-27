@@ -12,11 +12,10 @@ import '../modules/role_selection/views/role_selection_view.dart';
 import '../modules/car_details/views/car_details_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/details/views/details_view.dart';
-import '../modules/car_details/controllers/car_details_controller.dart';
 import '../modules/car_details/bindings/car_details_binding.dart';
 import '../modules/driver/views/driver_home_view.dart';
-import '../modules/driver/bindings/driver_binding.dart';
 import '../modules/driver/views/driver_profile_view.dart';
+import '../modules/driver/bindings/driver_binding.dart';
 
 class AppPages {
   static final routes = [

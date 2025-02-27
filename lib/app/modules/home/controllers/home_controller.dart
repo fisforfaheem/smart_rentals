@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/toast_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/car_model.dart';
+import '../../../data/models/driver_model.dart';
 
 class HomeController extends GetxController {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -44,34 +46,37 @@ class HomeController extends GetxController {
 
         allUsers.forEach((key, value) {
           if (value is Map && value['role'] == 'driver') {
-            final driverDetails =
-                value['driverDetails'] as Map<dynamic, dynamic>?;
-            final vehicleDetails =
-                driverDetails?['vehicleDetails'] as Map<dynamic, dynamic>?;
+            final isBooked = value['isBooked'] ?? false;
+            final bookedByUserId = driverBookings[key];
 
-            if (vehicleDetails != null) {
-              final isBooked = value['isBooked'] ?? false;
-              final bookedByUserId = driverBookings[key];
+            // Parse gender from the stored string
+            Gender gender = Gender.values.firstWhere(
+              (e) =>
+                  e.toString().split('.').last == (value['gender'] ?? 'other'),
+              orElse: () => Gender.other,
+            );
 
-              driversList.add(
-                CarModel(
-                  driverId: key as String,
-                  name: value['name'] ?? 'Unknown Driver',
-                  carModel: 'Vehicle',
-                  persons: vehicleDetails['capacity']?.toString() ?? '0',
-                  price: '\$180/day',
-                  image: 'assets/car2.png',
-                  driverImage: 'assets/dri1.png',
-                  phoneNumber: value['phone'] ?? '',
-                  vehicleColor: vehicleDetails['color'] ?? '',
-                  plateNumber: vehicleDetails['plateNumber'] ?? '',
-                  yearOfManufacture: vehicleDetails['yearOfManufacture'] ?? '',
-                  isBooked: isBooked,
-                  isBookedByCurrentUser:
-                      isBooked && bookedByUserId == currentUserId,
-                ),
-              );
-            }
+            // Get vehicle details from the correct path
+            final vehicleDetails = value['vehicleDetails'] as Map? ?? {};
+
+            driversList.add(
+              CarModel(
+                driverId: key as String,
+                name: value['name'] ?? 'Unknown Driver',
+                carModel: vehicleDetails['model'] ?? 'Vehicle',
+                persons: vehicleDetails['capacity']?.toString() ?? '0',
+                price: '\$${vehicleDetails['price'] ?? 180}/day',
+                image: 'assets/car2.png',
+                phoneNumber: value['phone'] ?? '',
+                vehicleColor: vehicleDetails['color'] ?? '',
+                plateNumber: vehicleDetails['plateNumber'] ?? '',
+                yearOfManufacture: vehicleDetails['yearOfManufacture'] ?? '',
+                isBooked: isBooked,
+                isBookedByCurrentUser:
+                    isBooked && bookedByUserId == currentUserId,
+                gender: gender,
+              ),
+            );
           }
         });
 
@@ -79,9 +84,14 @@ class HomeController extends GetxController {
         filteredCars.value = driversList;
 
         debugPrint('Loaded ${driversList.length} drivers');
+      } else {
+        debugPrint('No users found in database');
+        cars.value = [];
+        filteredCars.value = [];
       }
     } catch (e) {
       debugPrint('Error loading drivers: $e');
+      ToastHelper.showError('Failed to load drivers');
     } finally {
       isLoading.value = false;
     }
@@ -132,8 +142,13 @@ class HomeController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             children: [
               CircleAvatar(
+                backgroundColor: driver.driverIconColor.withOpacity(0.1),
                 radius: 40,
-                backgroundImage: AssetImage(driver.driverImage),
+                child: Icon(
+                  driver.driverIcon,
+                  color: driver.driverIconColor,
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -238,7 +253,7 @@ class HomeController extends GetxController {
       final bookingRef = _database.child('bookings').push();
       await bookingRef.set(bookingData);
 
-      // Update driver's status
+      // Update driver's status in the correct node
       await _database
           .child('users')
           .child(driver.driverId)
@@ -375,36 +390,4 @@ class HomeController extends GetxController {
       isLoading.value = false;
     }
   }
-}
-
-class CarModel {
-  final String driverId;
-  final String name;
-  final String carModel;
-  final String persons;
-  final String price;
-  final String image;
-  final String driverImage;
-  final String phoneNumber;
-  final String vehicleColor;
-  final String plateNumber;
-  final String yearOfManufacture;
-  final bool isBooked;
-  final bool isBookedByCurrentUser;
-
-  CarModel({
-    required this.driverId,
-    required this.name,
-    required this.carModel,
-    required this.persons,
-    required this.price,
-    required this.image,
-    required this.driverImage,
-    required this.phoneNumber,
-    required this.vehicleColor,
-    required this.plateNumber,
-    required this.yearOfManufacture,
-    this.isBooked = false,
-    this.isBookedByCurrentUser = false,
-  });
 }

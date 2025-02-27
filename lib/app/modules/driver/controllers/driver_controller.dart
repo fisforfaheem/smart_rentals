@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/toast_helper.dart';
 import 'package:intl/intl.dart';
+import '../../../data/models/driver_model.dart';
 
 class DriverController extends GetxController {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -23,6 +24,10 @@ class DriverController extends GetxController {
   final isEditing = false.obs;
   final isLoading = false.obs;
   final RxBool isBooked = false.obs;
+  final RxBool isAvailable = true.obs;
+  final RxString name = ''.obs;
+  final RxString email = ''.obs;
+  final Rx<Gender> gender = Gender.other.obs;
 
   @override
   void onInit() {
@@ -49,7 +54,10 @@ class DriverController extends GetxController {
     try {
       isLoading.value = true;
       final userId = _auth.currentUser?.uid;
-      if (userId == null) return;
+      if (userId == null) {
+        Get.offAllNamed('/login');
+        return;
+      }
 
       final snapshot = await _database.child('users').child(userId).get();
       if (snapshot.exists) {
@@ -78,6 +86,12 @@ class DriverController extends GetxController {
                 vehicleDetails['yearOfManufacture'] ?? '';
           }
         }
+
+        // Parse gender from the stored string
+        gender.value = Gender.values.firstWhere(
+          (e) => e.toString() == userData['gender'],
+          orElse: () => Gender.other,
+        );
       }
     } catch (e) {
       debugPrint('Error loading profile: $e');
@@ -108,6 +122,7 @@ class DriverController extends GetxController {
             'yearOfManufacture': yearOfManufactureController.text.trim(),
           },
         },
+        'gender': gender.value.toString(),
       };
 
       await _database.child('users').child(userId).update(updates);
@@ -232,6 +247,24 @@ class DriverController extends GetxController {
       ToastHelper.showError('Failed to cancel booking');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> toggleAvailability() async {
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      isAvailable.value = !isAvailable.value;
+      await _database
+          .child('users')
+          .child(userId)
+          .child('isAvailable')
+          .set(isAvailable.value);
+    } catch (e) {
+      debugPrint('Error toggling availability: $e');
+      // Revert the value if the update failed
+      isAvailable.value = !isAvailable.value;
     }
   }
 }
