@@ -57,6 +57,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -120,3 +121,12 @@ flutter:
     - assets/dri3.png
     - assets/sensor.png
     - assets/sensor2.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/car1.jpg"
+  min_sdk_android: 21
+  adaptive_icon_background: "#D2B48C"
+  adaptive_icon_foreground: "assets/car1.jpg"
+  remove_alpha_ios: true

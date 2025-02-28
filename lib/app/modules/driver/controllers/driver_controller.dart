@@ -86,8 +86,18 @@ class DriverController extends GetxController {
           vehicleColorController.text = vehicleDetails['color'] ?? '';
           vehicleCapacityController.text =
               vehicleDetails['capacity']?.toString() ?? '';
-          yearOfManufactureController.text =
-              vehicleDetails['yearOfManufacture'] ?? '';
+
+          // Format the year properly
+          final yearStr = vehicleDetails['yearOfManufacture'] ?? '';
+          if (yearStr.isNotEmpty) {
+            try {
+              final date = DateTime.parse(yearStr);
+              yearOfManufactureController.text = date.year.toString();
+            } catch (e) {
+              yearOfManufactureController.text = yearStr;
+            }
+          }
+
           licenseNumberController.text = vehicleDetails['licenseNumber'] ?? '';
         }
 
@@ -280,23 +290,59 @@ class DriverController extends GetxController {
   }
 
   Future<void> pickYearOfManufacture(BuildContext context) async {
-    try {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(1990),
-        lastDate: DateTime.now(),
-        initialDatePickerMode: DatePickerMode.year,
-      );
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1990),
+      lastDate: DateTime.now(),
+      initialDatePickerMode: DatePickerMode.year,
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFBE9B7B),
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
 
-      if (picked != null) {
-        yearOfManufactureController.text = DateFormat(
-          'yyyy-MM-dd',
-        ).format(picked);
-      }
-    } catch (e) {
-      debugPrint('Error picking date: $e');
-      ToastHelper.showError('Failed to pick date');
+    if (picked != null) {
+      // Format to show only the year
+      yearOfManufactureController.text = picked.year.toString();
+    }
+  }
+
+  String _getMonthName(int month) {
+    switch (month) {
+      case 1:
+        return 'Jan';
+      case 2:
+        return 'Feb';
+      case 3:
+        return 'Mar';
+      case 4:
+        return 'Apr';
+      case 5:
+        return 'May';
+      case 6:
+        return 'Jun';
+      case 7:
+        return 'Jul';
+      case 8:
+        return 'Aug';
+      case 9:
+        return 'Sep';
+      case 10:
+        return 'Oct';
+      case 11:
+        return 'Nov';
+      case 12:
+        return 'Dec';
+      default:
+        return '';
     }
   }
 }

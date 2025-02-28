@@ -313,14 +313,14 @@ class DriverProfileView extends GetView<DriverController> {
                                             () => controller
                                                 .pickYearOfManufacture(context),
                                         child: _buildInfoRow(
-                                          'Year of Manufacture',
+                                          '📅 Year',
                                           controller
                                               .yearOfManufactureController
                                               .text,
                                         ),
                                       )
                                       : _buildInfoRow(
-                                        'Year of Manufacture',
+                                        '📅 Year',
                                         controller
                                             .yearOfManufactureController
                                             .text,
@@ -424,16 +424,24 @@ class DriverProfileView extends GetView<DriverController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 16, color: Colors.white),
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? Colors.white,
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: valueColor ?? Colors.white,
+              ),
             ),
           ),
         ],

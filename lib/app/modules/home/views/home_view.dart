@@ -188,23 +188,42 @@ class HomeView extends GetView<HomeController> {
                         Hero(
                           tag: 'driver_${driver.driverId}',
                           child: CircleAvatar(
-                            backgroundColor: driver.driverIconColor.withOpacity(
-                              0.2,
-                            ),
+                            backgroundColor:
+                                driver.gender == Gender.male
+                                    ? const Color(0xFF4A90E2).withOpacity(0.1)
+                                    : driver.gender == Gender.female
+                                    ? const Color(0xFFE91E63).withOpacity(0.1)
+                                    : Colors.grey.withOpacity(0.1),
                             radius: 40,
-                            child: Icon(
-                              driver.gender == Gender.male
-                                  ? Icons.male
-                                  : driver.gender == Gender.female
-                                  ? Icons.female
-                                  : Icons.person,
-                              color:
-                                  driver.gender == Gender.male
-                                      ? Colors.blue
-                                      : driver.gender == Gender.female
-                                      ? Colors.pink
-                                      : Colors.grey,
-                              size: 35,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color:
+                                          driver.gender == Gender.male
+                                              ? const Color(0xFF4A90E2)
+                                              : driver.gender == Gender.female
+                                              ? const Color(0xFFE91E63)
+                                              : Colors.grey,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 32,
+                                    backgroundColor: Colors.transparent,
+                                    backgroundImage: AssetImage(
+                                      driver.gender == Gender.male
+                                          ? 'assets/dri1.png'
+                                          : driver.gender == Gender.female
+                                          ? 'assets/dri2.png'
+                                          : 'assets/dri3.png',
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
