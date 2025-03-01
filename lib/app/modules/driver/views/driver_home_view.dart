@@ -174,6 +174,66 @@ class DriverHomeView extends GetView<DriverController> {
               ),
             ),
           ),
+
+          // Add user details section when booked
+          Obx(() {
+            if (controller.isBooked.value &&
+                controller.currentUserDetails.value.isNotEmpty) {
+              return Container(
+                margin: const EdgeInsets.only(top: 15),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.person_pin, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Customer Details',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Colors.white30, height: 20),
+                    _buildUserDetailRow(
+                      Icons.person,
+                      'Name',
+                      controller.currentUserDetails.value['name'] ?? 'Unknown',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildUserDetailRow(
+                      Icons.phone,
+                      'Phone',
+                      controller.currentUserDetails.value['phone'] ??
+                          'Not provided',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildUserDetailRow(
+                      Icons.email,
+                      'Email',
+                      controller.currentUserDetails.value['email'] ??
+                          'Not provided',
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+
           if (controller.isBooked.value)
             Padding(
               padding: const EdgeInsets.only(top: 15),
@@ -202,6 +262,31 @@ class DriverHomeView extends GetView<DriverController> {
             ),
         ],
       ),
+    );
+  }
+
+  // Helper method to build user detail rows
+  Widget _buildUserDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white70, size: 16),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white70,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 14, color: Colors.white),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 

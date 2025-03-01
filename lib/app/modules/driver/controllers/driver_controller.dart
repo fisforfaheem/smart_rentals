@@ -30,6 +30,12 @@ class DriverController extends GetxController {
   final RxString email = ''.obs;
   final Rx<Gender> gender = Gender.other.obs;
 
+  // Add a map to store current user details
+  final Rx<Map<String, dynamic>> currentUserDetails = Rx<Map<String, dynamic>>(
+    {},
+  );
+  final RxString currentBookingId = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -163,8 +169,69 @@ class DriverController extends GetxController {
       _database.child('users').child(userId).child('isBooked').onValue.listen((
         event,
       ) {
-        isBooked.value = (event.snapshot.value as bool?) ?? false;
+        final bool isCurrentlyBooked = (event.snapshot.value as bool?) ?? false;
+        isBooked.value = isCurrentlyBooked;
+
+        // If booked, fetch the user details
+        if (isCurrentlyBooked) {
+          _fetchCurrentBookingDetails(userId);
+        } else {
+          // Clear user details if not booked
+          currentUserDetails.value = {};
+          currentBookingId.value = '';
+        }
       });
+    }
+  }
+
+  Future<void> _fetchCurrentBookingDetails(String driverId) async {
+    try {
+      // Find the booking for this driver with status 'pending'
+      final bookingsSnapshot = await _database.child('bookings').get();
+
+      if (bookingsSnapshot.exists) {
+        final bookings = bookingsSnapshot.value as Map<dynamic, dynamic>;
+
+        bookings.forEach((key, value) {
+          if (value is Map &&
+              value['driverId'] == driverId &&
+              value['status'] == 'pending') {
+            currentBookingId.value = key;
+
+            // Get the user ID from the booking
+            final userId = value['userId'] as String;
+
+            // Fetch user details
+            _fetchUserDetails(userId);
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint(
+        '[_fetchCurrentBookingDetails] Error fetching booking details: $e',
+      );
+    }
+  }
+
+  Future<void> _fetchUserDetails(String userId) async {
+    try {
+      final userSnapshot = await _database.child('users').child(userId).get();
+
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.value as Map<dynamic, dynamic>;
+        currentUserDetails.value = {
+          'name': userData['name'] ?? 'Unknown User',
+          'phone': userData['phone'] ?? 'No phone number',
+          'email': userData['email'] ?? 'No email',
+          // Add any other user details you want to display
+        };
+
+        debugPrint(
+          '[_fetchUserDetails] Fetched user details: ${currentUserDetails.value}',
+        );
+      }
+    } catch (e) {
+      debugPrint('[_fetchUserDetails] Error fetching user details: $e');
     }
   }
 
@@ -217,7 +284,7 @@ class DriverController extends GetxController {
                 ),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _confirmCancelCurrentBooking,
+                    onPressed: _confirmCancelBooking,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
@@ -242,12 +309,12 @@ class DriverController extends GetxController {
         barrierDismissible: false,
       );
     } catch (e) {
-      debugPrint('Error showing cancel dialog: $e');
+      debugPrint('[cancelCurrentBooking] Error showing cancel dialog: $e');
       ToastHelper.showError('Failed to show cancel dialog');
     }
   }
 
-  Future<void> _confirmCancelCurrentBooking() async {
+  Future<void> _confirmCancelBooking() async {
     try {
       isLoading.value = true;
       final userId = _auth.currentUser?.uid;
@@ -260,10 +327,21 @@ class DriverController extends GetxController {
       // Update driver's booking status
       await _database.child('users').child(userId).child('isBooked').set(false);
 
+      // Also update the booking status in the bookings node if we have a booking ID
+      if (currentBookingId.value.isNotEmpty) {
+        await _database.child('bookings').child(currentBookingId.value).update({
+          'status': 'cancelled',
+        });
+
+        // Clear the current booking details
+        currentBookingId.value = '';
+        currentUserDetails.value = {};
+      }
+
       Get.closeAllDialogs();
       ToastHelper.showSuccess('Booking cancelled successfully');
     } catch (e) {
-      debugPrint('Error cancelling booking: $e');
+      debugPrint('[_confirmCancelBooking] Error cancelling booking: $e');
       ToastHelper.showError('Failed to cancel booking');
     } finally {
       isLoading.value = false;
