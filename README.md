@@ -85,9 +85,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📬 Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
-
-Project Link: [https://github.com/yourusername/car_rental_app](https://github.com/yourusername/car_rental_app)
+Your Name - Faheem Ahmad- fisforfaheem@gmail.com
 
 ---
 
