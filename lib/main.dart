@@ -22,7 +22,7 @@ Future<void> main() async {
 
     // Put AuthService as permanent
     Get.put(AuthService(), permanent: true);
-    Get.put(BiometricService());
+    // Get.put(BiometricService());
 
     // Initialize notification service
     final notificationService = NotificationService();
